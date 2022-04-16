@@ -36,6 +36,6 @@ export default {
   padding: 0 5%;
 }
 span {
-  font-size: 3vh;
+  font-size: 1.5rem;
 }
 </style>

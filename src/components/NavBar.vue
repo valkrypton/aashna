@@ -45,7 +45,7 @@ export default {
 
 
 div a {
-  font-size: 3vh;
+  font-size: 1.5rem;
   color: var(--secondary-color);
   text-decoration: none;
   font-weight: bold;

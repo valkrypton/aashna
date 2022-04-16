@@ -28,6 +28,6 @@ export default {
   background-color: white;
 }
 span{
-  font-size: 3vh;
+  font-size: 1.5em;
 }
 </style>
