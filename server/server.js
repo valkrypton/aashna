@@ -15,8 +15,12 @@ app.listen(3000, function () {
 
 
 app.get("/getverificationcode", (req, res) => {
-    console.log("getting code");
-    getOTP(req, res)
+    if(checkIfUserExistsAPI(database,req,res)){
+        getOTP(req,res)
+        res.json({userExists:true})
+    }
+    else
+        res.json({userExists:true})
 })
 
 app.get("/verifycode", (req, res) => {
@@ -24,6 +28,3 @@ app.get("/verifycode", (req, res) => {
     verifyOTP(req, res)
 })
 
-app.get("/checkuser", (req, res) => {
-    checkIfUserExistsAPI(database, req, res)
-})

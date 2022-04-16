@@ -65,17 +65,13 @@ export default {
 
     function getCode() {
       if (validNust && !codeSent.value) {
-        axios.get(baseURL + '/checkuser?id=' + String(email.value)).then((response) => {
-          if (!response.data.userExists) {
-            console.log(email.value)
-            axios.get(baseURL + "/getverificationcode?id=" + String(email.value))
-                .then(function (response) {
-                  codeSent.value = true
-                });
-          } else {
-            console.log("user already exists")
-          }
-        })
+        axios.get(baseURL + '/getverificationcode?id=' + String(email.value))
+            .then(response => {
+              console.log(response.data.userExists)
+            })
+            .catch(err => {
+              console.log(err.message)
+            })
       }
     }
 

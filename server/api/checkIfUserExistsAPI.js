@@ -1,16 +1,17 @@
 const checkIfUserExistsAPI = (db, req, res) => {
-    console.log('checking')
     const email = req.query.id
+    let userExists = false
     db.promise().query('SELECT email FROM user where email = ?', [email])
         .then((output) => {
             const [results, fields] = output
             if (results.length === 0) {
-                res.json({userExists: false})
+                userExists = false
             } else {
-                res.json({userExists: true})
+                userExists = true
             }
         })
         .catch(err => console.log(err.message))
+    return userExists
 }
 
 module.exports = {checkIfUserExistsAPI}

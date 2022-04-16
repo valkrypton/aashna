@@ -3,7 +3,7 @@
 </template>
 
 <style>
-#app {
+  #app {
   font-family: "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
