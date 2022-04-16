@@ -18,7 +18,8 @@
           <input id="inputCode" v-model="code" required>
         </div>
         <div id="button-div">
-          <button v-if="!codeSent" type="submit" :class="{btn : true, 'btn-primary': true, invalid: !validNust}">Get
+          <button v-if="!codeSent" type="submit"
+                  :class="{btn : true, 'btn-primary': true, invalid: !validNust,disabled:!validNust}">Get
             code
           </button>
           <div v-else>
@@ -31,6 +32,9 @@
         <div v-if="codeEntered && invalidCode" class="alert alert-danger" role="alert">
           Entered code is wrong
         </div>
+        <div v-if="userExists" class="alert alert-danger" role="alert">
+          This email is already in use.
+        </div>
       </form>
     </div>
   </div>
@@ -42,6 +46,7 @@ import {ref} from "vue";
 import {watch} from 'vue';
 import axios from "axios";
 import {checkIfUserExists} from "@/apiCalls/calls";
+import {useRouter} from "vue-router";
 
 export default {
 
@@ -49,12 +54,14 @@ export default {
   components: {NavBar},
   setup() {
     const baseURL = "http://localhost:3000"
+    const router = useRouter()
     let email = ref('')
     let code = ref('');
     let validNust = ref(false);
     let codeSent = ref(false);
     let invalidCode = ref(true);
     let codeEntered = ref(false);
+    let userExists = ref(false)
 
     function checkValidity() {
       validNust.value = email.value.slice(email.value.length - 20, email.value.length)
@@ -67,7 +74,12 @@ export default {
       if (validNust && !codeSent.value) {
         axios.get(baseURL + '/getverificationcode?id=' + String(email.value))
             .then(response => {
-              console.log(response.data.userExists)
+              if (response.data.userExists) {
+                console.log('exists')
+                userExists.value = true
+              } else {
+                codeSent.value = true
+              }
             })
             .catch(err => {
               console.log(err.message)
@@ -80,9 +92,10 @@ export default {
         invalidCode.value = false;
         codeEntered.value = true;
         axios.get("http://localhost:3000/verifycode?id=" + email.value + "&code=" + code.value).then(function (response) {
-          if (response.data === "ok") {
+          console.log(response.data)
+          if (response.data.validOTP) {
             console.log("ok")
-            //continue
+            router.push({name:'signup-continue'})
           } else {
             console.log("ayo?")
             invalidCode.value = true;
@@ -108,7 +121,8 @@ export default {
       verifyCode,
       invalidCode,
       codeEntered,
-      resendCode
+      resendCode,
+      userExists
     }
   }
 
@@ -168,5 +182,10 @@ input {
 
 .code-btn {
   margin: 3px;
+}
+
+.alert-danger {
+  max-width: 20%;
+  margin: auto;
 }
 </style>

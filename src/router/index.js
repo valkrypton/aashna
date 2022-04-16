@@ -13,6 +13,11 @@ const routes = [
     path: '/sign-up',
     name: 'signup',
     component: ()=>import('@/views/SignUp')
+  },
+  {
+    path: '/sign-up/continue',
+    name:'signup-continue',
+    component: ()=>import('@/views/SignUpContinue')
   }
 
 ]
