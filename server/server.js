@@ -7,6 +7,7 @@ const {getOTP, verifyOTP, checkIfUserExists} = require('./api/signUpAPI')
 app.use(cors())
 app.use(json())
 
+console.log(process.env.email)
 
 app.listen(3000, function () {
     console.log("server running at port 3000");

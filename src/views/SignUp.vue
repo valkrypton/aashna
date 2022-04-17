@@ -19,8 +19,8 @@
         </div>
         <div id="button-div">
           <button v-if="!codeSent" type="submit"
-                  :class="{btn : true, 'btn-primary': true, invalid: !validNust,disabled:!validNust}">Get
-            code
+                  :class="{btn : true, 'btn-primary': true, invalid: !validNust,disabled:!validNust}">
+            Get code
           </button>
           <div v-else>
             <button class="btn btn-primary code-btn" @click="verifyCode()">Verify Code</button>

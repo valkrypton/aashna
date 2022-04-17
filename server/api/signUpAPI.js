@@ -2,13 +2,13 @@ const nodemailer = require("nodemailer");
 let transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: 'valkrypton@gmail.com',
-        pass: 'mtGc1@&8%DE2$htlaN*9V&kolbu3M9^49tkDffjcS!OPn*F%gD'
+        user: process.env.email,
+        pass: process.env.EMAIL_PW
     }
 });
 
 let mailOptions = {
-    from: 'valkrypton@gmail.com',
+    from: process.env.email,
     to: '',
     subject: 'Here is your verification code for Aashna',
     text: ''
