@@ -44,8 +44,10 @@ const checkIfUserExists = async (db, req, res) => {
     const email = req.query.id
     let userExists = false
     const [rows,fields] = await db.execute('SELECT email FROM user where email = ?', [email])
-    userExists = rows.length!==0
+    userExists = rows.length !== 0
     return userExists
 }
+
+
 
 module.exports = {getOTP, verifyOTP, checkIfUserExists}

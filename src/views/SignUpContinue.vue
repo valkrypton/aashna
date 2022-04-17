@@ -92,6 +92,7 @@
 </template>
 
 <script setup>
+  console.log(route.query.email);
   import {ref} from 'vue'
   const years = ref([]);
   let startYear = new Date().getFullYear() - 7;
