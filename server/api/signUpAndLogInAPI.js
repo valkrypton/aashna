@@ -1,5 +1,7 @@
 const nodemailer = require("nodemailer");
 const bcrypt = require('bcrypt')
+
+
 let transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -26,14 +28,12 @@ const getOTP = (req, res) => {
         if (error) {
             console.log(error.message)
         } else {
-            console.log('sent successfully')
             console.log(info)
         }
     })
 }
 const verifyOTP = (req, res) => {
     if (String(verificationCodeMap.get(req.query.id)) === String(req.query.code)) {
-        console.log("AAAAAAAAAAAAAAAAAaaa")
         verificationCodeMap.delete(req.query.id);
         res.send({validOTP: true});
         //do something here
@@ -41,29 +41,28 @@ const verifyOTP = (req, res) => {
         res.send({validOTP: false});
     }
 }
-const checkIfUserExists = async (db, req, res) => {
-    let email = ''
-    if (req.body.userData) {
-        email = req.body.userData.email
-    }
-    if (req.query.id) {
-        email = req.query.id
-    }
-    const [rows, fields] = await db.execute('SELECT email FROM user where email = ?', [email])
+const checkIfUserExists = async (db, email) => {
+    const [rows, fields] = await db.execute('SELECT user_id, email FROM user where email = ?', [email])
     return rows.length !== 0
 }
 
 const registerUser = async (db, req, res) => {
-    const user = req.body.userData
-    await db.execute('INSERT INTO user VALUES(null,?,?,?,?,?,?,?,?,?,?,"")',
-        [user.email, await bcrypt.hash(user.pass, 5), user.fname, user.lname, user.bio, 20, user.school,
-             user.batch, Number(user.gender), Number(user.genderPreference)])
-    for (let i = 0; i < user.interests.length; ++i)
-        await db.execute('INSERT INTO user_interests values(1   ,?)', [user.interests[i]])
+    await db.execute('INSERT INTO user VALUES(null,?,?,?,?,?,?,?,?,?,?,?)',
+        [req.body.email, await bcrypt.hash(req.body.password, 5), req.body.first_name, req.body.last_name,
+            req.body.bio, 20, req.body.school, req.body.batch, Number(req.body.gender),
+            Number(req.body.genderpreference), req.file.path])
+
+    //TODO : fix this
+    const [rows, fields] = await db.execute('SELECT user_id FROM user where email=? ', [req.body.email])
+    for (let i = 0; i < req.body.interests.length; ++i)
+        await db.execute('INSERT INTO user_interests values(?,?)', [Number(rows[0].user_id), req.body.interests[i]])
+
 }
+
 const verifyPassword = async (db, req, res) => {
-    const [rows, fields] = await db.execute('SELECT * FROM user WHERE email = ?', [req.body.userData.email])
-    if (await bcrypt.compare(req.body.userData.pass, rows[0].password)){
+    const [rows, fields] = await db.execute('SELECT * FROM user WHERE email = ?', [req.body.email])
+
+    if (await bcrypt.compare(req.body.pass, rows[0].password)) {
         const returnedUser = rows[0]
         delete returnedUser.password
         return returnedUser

@@ -13,15 +13,23 @@
   <About/>
 </template>
 
-<script>
+<script setup>
 // @ is an alias to /src
 import NavBar from "@/components/NavBar";
 import About from "@/components/About";
+import {onMounted} from "vue";
+import axios from "axios";
+import router from "@/router";
 
-export default {
-  name: 'HomeView',
-  components: {About, NavBar}
-}
+const baseURL = "http://localhost:3000"
+onMounted(() => {
+  axios.get(baseURL + '/sessionCheck').then(response => {
+    console.log(response.data)
+    if (response.data) {
+      router.push("/home")
+    }
+  })
+})
 
 </script>
 

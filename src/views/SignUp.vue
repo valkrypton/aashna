@@ -5,13 +5,13 @@
   </div>
   <div class="page-content">
     <div class="form-v10-content">
-      <form ref="form" class="form-detail" id="myform">
+      <form ref="form" class="form-detail" id="myform" enctype="multipart/form-data" @submit.prevent="submitForm">
         <div class="form-left">
-          <h2>General Infomation</h2>
+          <h2>General Information</h2>
           <div class="form-row">
-            <input type="email" name="email" id="email" placeholder="xyz@student.nust.edu.pk" v-model="user.email"
+            <input type="email" name="email" id="email" placeholder="xyz@student.nust.edu.pk" v-model="email"
                    required>
-            <div v-if="!validNust && user.email.length !== 0" class="alert alert-danger" role="alert">
+            <div v-if="!validNust && email.length !== 0" class="alert alert-danger" role="alert">
               Entered email is not a valid NUST student email
             </div>
             <div v-if="userExists" class="alert alert-danger" role="alert">
@@ -19,69 +19,78 @@
             </div>
           </div>
           <div class="form-row">
-            <input type="password" name="password" v-model="user.pass" id="password" placeholder="Password" required>
-            <div v-if="!validPw && user.pass.length !== 0" class="alert alert-danger" role="alert">
+            <input type="password" name="password" v-model="pass" id="password" placeholder="Password" required>
+            <div v-if="!validPw && pass.length !== 0" class="alert alert-danger" role="alert">
               Password must contain at least 8 characters, at least one letter and at least one number
             </div>
           </div>
           <div class="form-group">
             <div class="form-row form-row-1">
-              <input v-model="user.fname" type="text" name="first_name" id="first_name" class="input-text"
+              <input type="text" name="first_name" id="first_name" class="input-text"
                      placeholder="First Name" required>
             </div>
             <div class="form-row form-row-2">
-              <input v-model="user.lname" type="text" name="last_name" id="last_name" class="input-text"
+              <input type="text" name="last_name" id="last_name" class="input-text"
                      placeholder="Last Name" required>
             </div>
           </div>
           <div class="form-row">
-            <select v-model="user.gender" name="gender" class="custom-select" required>
+            <select name="gender" class="custom-select" required>
               <option class="option" value="" disabled selected>Gender</option>
               <option class="option" value="0">Male</option>
               <option class="option" value="1">Female</option>
               <option class="option" value="2">Non-binary</option>
             </select>
           </div>
+          <div class="form-row" v-if="img_src">
+            <img :src="img_src" alt="profile_img">
+          </div>
+          <div class="form-row">
+            <input type="file" accept="image/*" ref="file" name="profile_img" @change="showImg" required/>
+          </div>
           <div class="form-row" v-if="!codeSent">
-            <input class="register" type="button" @click="getCode" value="Get Code">
+            <input class="register" type="button" @click="getCode" value="Get OTP">
           </div>
           <div v-else class="form-row">
             <h5 style="color: black">One Time Code</h5>
-            <input id="inputCode" v-model="code" required>
-            <input class="register" @click="verifyCode()" type="button" value="Verify Code"
+            <input id="inputCode" v-model="code" required autocomplete="off">
+            <input class="register" @click="verifyCode()" type="button" value="Verify OTP"
                    style="margin-right: 5px">
-            <input class="register" @click="resendCode()" type="button" value="Resend Code"
+            <input class="register" @click="resendCode()" type="button" value="Resend OTP"
                    style="margin-left: 5px">
             <div v-if="codeEntered && invalidCode" class="alert alert-danger" role="alert">
               Entered code is wrong
             </div>
           </div>
+          <div class="form-row" v-if="!invalidCode">
+            <input type="submit" class="register" value="Register">
+          </div>
         </div>
         <div class="form-right">
           <h2>Details</h2>
           <div class="form-row">
-            <select v-model="user.school" name="School" required>
+            <select name="school" required>
               <option value="" disabled selected>School</option>
-              <option value="scee">SCEE</option>
-              <option value="scme">SCME</option>
-              <option value="seecs">SEECS</option>
-              <option value="smme">SMME</option>
-              <option value="nice">NICE</option>
-              <option value="nbs">NBS</option>
-              <option value="sada">SADA</option>
-              <option value="s3h">S3H</option>
-              <option value="asab">ASAB</option>
-              <option value="sns">SNS</option>
+              <option value="SCEE">SCEE</option>
+              <option value="SCME">SCME</option>
+              <option value="SEECS">SEECS</option>
+              <option value="SMME">SMME</option>
+              <option value="NICE">NICE</option>
+              <option value="NBS">NBS</option>
+              <option value="SADA">SADA</option>
+              <option value="S3H">S3H</option>
+              <option value="ASAB">ASAB</option>
+              <option value="SNS">SNS</option>
             </select>
           </div>
           <div class="form-row">
-            <select v-model="user.batch" name="Batch" required>
+            <select name="batch" required>
               <option value="" disabled selected>Batch</option>
-              <option v-for="year in years">{{ year }}</option>
+              <option v-for="year in years" :value="year">{{ year }}</option>
             </select>
           </div>
           <div class="form-row">
-            <select v-model="user.genderPreference" name="genderpreference" required>
+            <select name="genderpreference" required>
               <option class="option" value="" disabled selected>Gender Preference</option>
               <option class="option" value="0">Male</option>
               <option class="option" value="1">Female</option>
@@ -89,13 +98,14 @@
             </select>
           </div>
           <div class="form-row">
-            <textarea v-model="user.bio" class="" placeholder="A short bio.." required></textarea>
+            <textarea class="" placeholder="A short bio.." name="bio" required></textarea>
           </div>
           <div class="form-row">
             <h5>Select up to 8 interests</h5>
             <div class="interests">
               <div v-for="interest in interests" :key="interest">
-                <input type="checkbox" class="btn-check" :id="interest.name" autocomplete="off"
+                <input name="interests" type="checkbox" :value="interest.name" class="btn-check" :id="interest.name"
+                       autocomplete="off"
                        v-model="interest.checked" @click="check">
                 <label class="btn btn-light interests-item" :for="interest.name">{{
                     interest.name
@@ -118,6 +128,7 @@ import axios from "axios";
 import {useRouter} from "vue-router";
 import {checkEmailValidity, checkPwValidity} from "@/composables/validEmailPassword";
 import {possibleInterests} from "@/composables/possibleInterests";
+import ImageDrop from "@/components/ImageDrop";
 
 const baseURL = "http://localhost:3000"
 const router = useRouter();
@@ -131,33 +142,27 @@ let userExists = ref(false)
 const interests = ref(possibleInterests)
 const form = ref(null)
 const years = ref([]);
+const email = ref('')
+const pass = ref('')
+const img_src = ref(null)
 let startYear = new Date().getFullYear() - 7;
 
-const user = ref({
-  email: '',
-  pass: '',
-  fname: '',
-  lname: '',
-  gender: '',
-  school: '',
-  batch: '',
-  genderPreference: '',
-  bio: '',
-  interests: []
-})
 
-
-watch(user.value, () => {
-      validNust.value = checkEmailValidity(user.value.email)
-      validPw.value = checkPwValidity(user.value.pass)
+watch(email, () => {
+      validNust.value = checkEmailValidity(email.value)
       userExists.value = false
     }
 )
+watch(pass, () => {
+  validPw.value = checkPwValidity(pass.value)
+  userExists.value = false
+})
 
 function getCode() {
+  //form input validation
   if ([...form.value.querySelectorAll('input,select,textarea')].every(input => input.reportValidity())) {
     if (validNust.value && validPw.value && !codeSent.value) {
-      axios.get(baseURL + '/getverificationcode?id=' + String(user.value.email))
+      axios.get(baseURL + '/getverificationcode?id=' + String(email.value))
           .then(response => {
             if (response.data.userExists) {
               userExists.value = true
@@ -172,18 +177,29 @@ function getCode() {
   }
 }
 
-function verifyCode() {
-  if ([...form.value.querySelectorAll('input,select,textarea')].every(input => input.reportValidity())) {
-    if (codeSent.value) {
-      codeEntered.value = true;
-      axios.get(baseURL + "/verifycode?id=" + user.value.email + "&code=" + code.value).then(function (response) {
-        invalidCode.value = !response.data.validOTP;
-        if (!invalidCode.value) {
-          registerUser()
-        }
-      })
+function submitForm() {
+  const fd = new FormData(form.value)
+  axios.post(baseURL + '/registerUser', fd, {
+    headers: {
+      'content-type': 'multipart/form-data'
     }
+  }).then(response => {
+    if (response.data.registered)
+      router.push('/home')
+  }).catch(err => {
+    console.log(err)
+  })
+
+}
+
+function verifyCode() {
+  if (codeSent.value) {
+    codeEntered.value = true;
+    axios.get(baseURL + "/verifycode?id=" + email.value + "&code=" + code.value).then(function (response) {
+      invalidCode.value = !response.data.validOTP;
+    })
   }
+
 }
 
 function resendCode() {
@@ -210,19 +226,17 @@ for (let i = 0; i < 8; i++) {
 function check(e) {
   if (interests.value.filter(i => i.checked).length >= 8) {
     e.target.checked = false;
-  } else {
-    user.value.interests.push(e.target.id)
   }
 }
 
-function registerUser() {
-  axios.post(baseURL + '/registerUser', {
-    userData: user.value
-  }).then(() => {
-    console.log('user added')
-  })
+function showImg(e) {
+  const file = e.target.files[0]
+  let reader = new FileReader()
+  reader.readAsDataURL(file)
+  reader.onload = f => {
+    img_src.value = f.target.result
+  }
 }
-
 </script>
 
 <style scoped>
@@ -250,6 +264,11 @@ body {
   -webkit-justify-content: center;
   align-items: center;
 
+}
+
+img {
+  width: 50%;
+  height: fit-content;
 }
 
 .form-v10-content {
@@ -296,7 +315,7 @@ body {
   background: var(--main-color);
   border-top-right-radius: 10px;
   border-bottom-right-radius: 10px;
-  overflow: auto;
+  overflow: hidden;
 }
 
 .form-v10-content .form-detail .form-right h2 {

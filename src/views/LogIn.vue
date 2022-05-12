@@ -5,7 +5,7 @@
       <div id="welcome-msg">
         <h3>Log in to your account!</h3>
       </div>
-      <form class="form-detail" id="my-form" @submit.prevent="login">
+      <form ref="form" class="form-detail" id="my-form" @submit.prevent="login">
         <div class="form-left">
           <div class="form-row">
             <input type="email" name="email" id="email" placeholder="xyz@student.nust.edu.pk" v-model="user.email"
@@ -40,12 +40,15 @@ import NavBar from "@/components/NavBar";
 import {ref, watch} from "vue";
 import {checkEmailValidity, checkPwValidity} from "@/composables/validEmailPassword";
 import axios from "axios";
+import {useRouter} from "vue-router";
 
+const router = useRouter()
 const baseURL = "http://localhost:3000"
 const validNust = ref(false)
 const validPw = ref(false)
 const incorrectPass = ref(false)
 const userExists = ref(true)
+const form = ref(null)
 const user = ref({
   email: '',
   pass: ''
@@ -59,15 +62,14 @@ watch(user.value, () => {
 })
 
 function login() {
+  const fd = new FormData(form.value)
   axios.post(baseURL + '/login', {
-    userData: user.value
+    email: fd.get("email"),
+    pass: fd.get("password")
   }).then(response => {
-    if (!response.data.userExists && !response.data.passwordVerified) {
-      userExists.value = false
-    } else if (response.data.userExists && !response.data.passwordVerified) {
-      incorrectPass.value = true
-    } else
-      console.log(response.data.userData)
+    router.push('/home')
+  }).catch(err => {
+    console.log(err)
   })
 }
 </script>
