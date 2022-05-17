@@ -62,7 +62,7 @@ const registerUser = async (db, req, res) => {
 const verifyPassword = async (db, req, res) => {
     const [rows, fields] = await db.execute('SELECT * FROM user WHERE email = ?', [req.body.email])
 
-    if (await bcrypt.compare(req.body.pass, rows[0].password)) {
+    if (await bcrypt.compare(req.body.password, rows[0].password)) {
         const returnedUser = rows[0]
         delete returnedUser.password
         return returnedUser

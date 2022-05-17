@@ -17,18 +17,24 @@
 // @ is an alias to /src
 import NavBar from "@/components/NavBar";
 import About from "@/components/About";
-import {onMounted} from "vue";
+import {onBeforeMount} from "vue";
 import axios from "axios";
 import router from "@/router";
 
 const baseURL = "http://localhost:3000"
-onMounted(() => {
-  axios.get(baseURL + '/sessionCheck').then(response => {
-    console.log(response.data)
-    if (response.data) {
-      router.push("/home")
-    }
-  })
+onBeforeMount(() => {
+  if (localStorage.getItem('jwt') != null) {
+    axios.get(baseURL+"/sessionCheck",{
+      headers:{
+        Authorization:'Bearer '+ localStorage.getItem('jwt')
+      }
+    }).then(response=>{
+      if (response.data.sessionExists)
+        router.push("/home")
+    }).catch(err=>{
+      console.log(err.message)
+    })
+  }
 })
 
 </script>

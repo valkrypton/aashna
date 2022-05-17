@@ -3,19 +3,7 @@ const app = express();
 const cors = require('cors')
 const database = require("./database");
 const multer = require("multer");
-const session = require("express-session")
-const cookieParser = require("cookie-parser")
-
-app.use(session({
-    secret: 'ayooo',
-    saveUninitialized: true,
-    cookie: {maxAge: 1000 * 60 * 60 * 24},
-    resave: false
-}))
-
-const userSessions = new Map()
-
-app.use(cookieParser())
+const jwt = require("jsonwebtoken")
 
 const {
     getOTP,
@@ -24,21 +12,20 @@ const {
     registerUser,
     verifyPassword
 } = require('./api/signUpAndLogInAPI')
-const bodyParser = require("body-parser");
-const {response} = require("express");
+const getPeople = require("./api/getPeople");
 
-app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({extended: true}))
+app.use(express.static("imgs"))
 
 const localStorage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, "../server/imgs/")
     },
     filename: function (req, file, cb) {
-        cb(null, file.originalname + '-' + req.body.email + ".jpeg")
+        cb(null, req.body.email + ".jpeg")
     }
 })
 const upload = multer({storage: localStorage})
+
 app.use(cors())
 
 app.listen(3000, function () {
@@ -59,22 +46,58 @@ app.get("/verifycode", (req, res) => {
 
 app.post('/registerUser', upload.single("profile_img"),
     async (req, res) => {
+        req.file.path = req.body.email + ".jpeg"
         await registerUser(await database(), req, res)
         res.json({registered: true})
     })
 
-app.post('/login', async (req, res) => {
+app.post('/login', upload.none(), async (req, res) => {
     if (await checkIfUserExists(await database(), req.body.email)) {
         const user = await verifyPassword(await database(), req, res)
         if (user) {
-            userSessions.set(user.user_id, user)
-            req.session.uid = user.user_id;
+            jwt.sign({user: user}, 'secret', {expiresIn: '23h'},
+                (err, token) => {
+                    if (err) {
+                        console.log(err)
+                    } else {
+                        res.send(token)
+                    }
+                }
+            )
         }
     }
-    console.log(req.session)
-    res.send('ok')
 })
 
 app.get('/sessionCheck', async (req, res) => {
-    res.send(req.session.uid);
+    const authHeader = req.headers['authorization']
+    const token = authHeader && authHeader.split(' ')[1]
+    jwt.verify(token, 'secret', {}, (err, decoded) => {
+        if (err)
+            console.log("no sessions")
+        else
+            res.send({sessionExists: true})
+    })
+})
+app.get("/getPeople", async (req, res) => {
+    const authHeader = req.headers['authorization']
+    const token = authHeader && authHeader.split(' ')[1]
+    jwt.verify(token, 'secret', {}, async (err, decoded) => {
+        if (err)
+            console.log("no maidens for you")
+        else {
+            const users = await getPeople(decoded.user, await database())
+            res.json(users)
+        }
+    })
+
+})
+app.get("/currentUser", async (req, res) => {
+    const authHeader = req.headers['authorization']
+    const token = authHeader && authHeader.split(' ')[1]
+    jwt.verify(token, 'secret', {}, (err, decoded) => {
+        if (err)
+            console.log("no current user")
+        else
+            res.send(decoded.user)
+    })
 })

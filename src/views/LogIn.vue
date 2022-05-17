@@ -5,7 +5,7 @@
       <div id="welcome-msg">
         <h3>Log in to your account!</h3>
       </div>
-      <form ref="form" class="form-detail" id="my-form" @submit.prevent="login">
+      <form ref="loginForm" class="form-detail" id="my-form" @submit.prevent="login" enctype="multipart/form-data">
         <div class="form-left">
           <div class="form-row">
             <input type="email" name="email" id="email" placeholder="xyz@student.nust.edu.pk" v-model="user.email"
@@ -48,7 +48,7 @@ const validNust = ref(false)
 const validPw = ref(false)
 const incorrectPass = ref(false)
 const userExists = ref(true)
-const form = ref(null)
+const loginForm = ref(null)
 const user = ref({
   email: '',
   pass: ''
@@ -62,15 +62,20 @@ watch(user.value, () => {
 })
 
 function login() {
-  const fd = new FormData(form.value)
-  axios.post(baseURL + '/login', {
-    email: fd.get("email"),
-    pass: fd.get("password")
-  }).then(response => {
-    router.push('/home')
-  }).catch(err => {
-    console.log(err)
-  })
+  const fd = new FormData(loginForm.value)
+  if (validPw.value && validNust.value) {
+    axios.post(baseURL + '/login', fd, {
+      headers: {
+        'content-type': 'multipart/form-data'
+      }
+    }).then(response => {
+      console.log(response.data)
+      localStorage.setItem('jwt', response.data)
+      router.push('/home')
+    }).catch(err => {
+      console.log(err)
+    })
+  }
 }
 </script>
 
