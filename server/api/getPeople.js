@@ -1,5 +1,5 @@
 const getPeople = async (user, db) => {
-    const [rows, fields] = await db.execute('SELECT * FROM user WHERE user_id \n' +
+     const [rows,fields] = await db.execute('SELECT * FROM user WHERE user_id \n' +
         'NOT IN (SELECT swipee FROM user_swiped_left_on WHERE swiper = ?) \n' +
         'AND user_id NOT IN (SELECT swipee FROM user_swiped_right_on WHERE swiper = ?) \n' +
         'AND user_id <> ? \n' +

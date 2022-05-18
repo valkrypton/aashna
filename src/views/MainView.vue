@@ -1,20 +1,23 @@
 <template>
-  <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top">
-    <div class="container-fluid">
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        <li class="nav-item">
-          <img :src="img_url" alt="" width="50" height="50" class="mb-lg-0 mr-1">
-          <span class="navbar-link active">{{ user.fname }}</span>
-        </li>
-      </ul>
-      <a class="navbar-brand font-weight-bold" style="color: #0E3EDA;" href="#">Aashna</a>
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        <li class="nav-item">
-          <a class="nav-link active" @click="logout" style="cursor: pointer">Logout</a>
-        </li>
-      </ul>
-    </div>
-  </nav>
+  <!--  <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top">
+      <div class="container-fluid">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <img :src="img_url" alt="" width="50" height="50" class="mb-lg-0 mr-1">
+            <span class="navbar-link active">{{ user.fname }}</span>
+          </li>
+        </ul>
+        <a class="navbar-brand font-weight-bold" style="color: #0E3EDA;" href="#">Aashna</a>
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link active" @click="logout" style="cursor: pointer">Logout</a>
+          </li>
+        </ul>
+      </div>
+    </nav>-->
+
+  <NavBarHome :user_name="user.fname" :img_url="img_url" :logout="logout  "/>
+
   <div class="tinder">
     <div class="tinder--status">
       <i class="fa fa-remove"></i>
@@ -22,9 +25,13 @@
     </div>
     <div class="tinder--cards">
       <div v-for="user in users" :key="user.user_id" class="tinder--card">
-        <img width="300" height="400" :src="user.img_url">
-        <h3>{{ user.fname }}</h3>
-        <p>{{ user.bio }}</p>
+        <div style="position: absolute;">
+          <img width="300" height="400" :src="user.img_url" >
+          <h3 style="position: fixed; top: 260px">{{ user.fname }}, {{ user.age }}</h3>
+          <h3 style="position: fixed; top: 300px">{{ user.school }}</h3>
+          <h3 style="position: fixed; top: 330px">{{ user.batch }}</h3>
+          <p>{{ user.bio }}</p>
+        </div>
       </div>
     </div>
     <div class="tinder--buttons">
@@ -32,6 +39,7 @@
       <button id="love"><i class="fa fa-heart"></i></button>
     </div>
   </div>
+
 </template>
 
 <script setup>
@@ -39,6 +47,7 @@ import hammer from "../hammerjs.js"
 import {onBeforeMount, onMounted, onUpdated, ref, watch} from "vue";
 import axios from "axios";
 import {useRouter} from "vue-router";
+import NavBarHome from "@/components/NavBarHome";
 
 
 const user = ref(null)
@@ -87,9 +96,11 @@ onMounted(() => {
   fontScript.setAttribute('crossorigin', 'anonymous')
   document.head.appendChild(fontScript)
 })
+
 onUpdated(() => {
   var tinderContainer = document.querySelector('.tinder');
   var allCards = document.querySelectorAll('.tinder--card');
+  console.log(allCards.length)
   var nope = document.getElementById('nope');
   var love = document.getElementById('love');
 
@@ -123,7 +134,7 @@ onUpdated(() => {
       var yMulti = event.deltaY / 80;
       var rotate = xMulti * yMulti;
 
-      event.target.style.transform = 'translate(' + event.deltaX + 'px, ' + event.deltaY + 'px) rotate(' + rotate + 'deg)';
+      el.style.transform = 'translate(' + event.deltaX + 'px, ' + event.deltaY + 'px) rotate(' + rotate + 'deg)';
     });
 
     hammertime.on('panend', function (event) {
@@ -134,10 +145,10 @@ onUpdated(() => {
       var moveOutWidth = document.body.clientWidth;
       var keep = Math.abs(event.deltaX) < 80 || Math.abs(event.velocityX) < 0.5;
 
-      event.target.classList.toggle('removed', !keep);
+      el.classList.toggle('removed', !keep);
 
       if (keep) {
-        event.target.style.transform = '';
+        el.style.transform = '';
       } else {
         var endX = Math.max(Math.abs(event.velocityX) * moveOutWidth, moveOutWidth);
         var toX = event.deltaX > 0 ? endX : -endX;
@@ -147,7 +158,7 @@ onUpdated(() => {
         var yMulti = event.deltaY / 80;
         var rotate = xMulti * yMulti;
 
-        event.target.style.transform = 'translate(' + toX + 'px, ' + (toY + event.deltaY) + 'px) rotate(' + rotate + 'deg)';
+        el.style.transform = 'translate(' + toX + 'px, ' + (toY + event.deltaY) + 'px) rotate(' + rotate + 'deg)';
         initCards();
       }
     });
@@ -176,11 +187,12 @@ onUpdated(() => {
     };
   }
 
-  var nopeListener = createButtonListener(false);
-  var loveListener = createButtonListener(true);
+  let nopeListener = createButtonListener(false);
+  let loveListener = createButtonListener(true);
 
-  nope.addEventListener('click', nopeListener);
-  love.addEventListener('click', loveListener);
+  nope.onclick = nopeListener;
+  love.onclick = loveListener;
+
 })
 
 </script>
@@ -190,15 +202,56 @@ body {
   background-color: #FFF5FA;
 }
 
-li.navbar-brand img {
-  border-radius: 100%;
+
+
+.navigation {
+  top: 0;
+  z-index: 10;
+  position: sticky;
+  font-weight: bold;
+  width: 100%;
+  height: 3rem;
+  background-color: white;
+  display: inline-flex;
+  text-align: center;
 }
 
-*, *:before, *:after {
+.navigation img {
+  width: 40px;
+  height: 40px;
+  margin-left: 1%;
+  margin-top: 0.3%;
+}
+
+.nav-uname {
+  margin-left: 0.5%;
+  margin-top: auto;
+  margin-bottom: auto;
+  color: var(--secondary-color);
+}
+
+.nav-brand {
+  color: var(--main-color);
+  font-size: 1.6rem;
+  margin: auto;
+}
+
+.nav-logout {
+  margin-right: 1%;
+  margin-top: auto;
+  margin-bottom: auto;
+  cursor: pointer;
+}
+
+.nav-logout:hover {
+  color: var(--main-color);
+}
+
+/**, *:before, *:after {
   box-sizing: border-box;
   padding: 0;
   margin: 0;
-}
+}*/
 
 
 .tinder {
@@ -258,7 +311,7 @@ li.navbar-brand img {
 
 .tinder--card {
   display: inline-block;
-  width: 110vw;
+  width: 30vw;
   max-width: 600px;
   height: 70vh;
   background: #FFFFFF;
@@ -277,7 +330,8 @@ li.navbar-brand img {
 }
 
 .tinder--card img {
-  max-width: 100%;
+  width: 100%;
+
   pointer-events: none;
 }
 

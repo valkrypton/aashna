@@ -128,7 +128,6 @@ import axios from "axios";
 import {useRouter} from "vue-router";
 import {checkEmailValidity, checkPwValidity} from "@/composables/validEmailPassword";
 import {possibleInterests} from "@/composables/possibleInterests";
-import ImageDrop from "@/components/ImageDrop";
 
 const baseURL = "http://localhost:3000"
 const router = useRouter();

@@ -7,7 +7,6 @@ async function connectdb() {
         password: process.env.db_pass,
         database: 'aashna'
     })
-
 }
 
 module.exports = connectdb

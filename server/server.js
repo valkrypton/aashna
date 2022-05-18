@@ -1,7 +1,7 @@
 const express = require('express')
 const app = express();
 const cors = require('cors')
-const database = require("./database");
+const database = require("../server/database")
 const multer = require("multer");
 const jwt = require("jsonwebtoken")
 
@@ -13,7 +13,10 @@ const {
     verifyPassword
 } = require('./api/signUpAndLogInAPI')
 const getPeople = require("./api/getPeople");
-
+let db
+(async () => {
+    db = await database()
+})()
 app.use(express.static("imgs"))
 
 const localStorage = multer.diskStorage({
@@ -29,11 +32,11 @@ const upload = multer({storage: localStorage})
 app.use(cors())
 
 app.listen(3000, function () {
-    console.log("server running at port 3000");
+    console.log("server running at port 30wapdcfeipa");
 })
 
 app.get("/getverificationcode", async (req, res) => {
-    if (!await checkIfUserExists(await database(), req.query.id)) {
+    if (!await checkIfUserExists(db, req.query.id)) {
         getOTP(req, res)
         res.json({userExists: false})
     } else
@@ -47,13 +50,13 @@ app.get("/verifycode", (req, res) => {
 app.post('/registerUser', upload.single("profile_img"),
     async (req, res) => {
         req.file.path = req.body.email + ".jpeg"
-        await registerUser(await database(), req, res)
+        await registerUser(db, req, res)
         res.json({registered: true})
     })
 
 app.post('/login', upload.none(), async (req, res) => {
-    if (await checkIfUserExists(await database(), req.body.email)) {
-        const user = await verifyPassword(await database(), req, res)
+    if (await checkIfUserExists(db, req.body.email)) {
+        const user = await verifyPassword(db, req, res)
         if (user) {
             jwt.sign({user: user}, 'secret', {expiresIn: '23h'},
                 (err, token) => {
@@ -85,7 +88,7 @@ app.get("/getPeople", async (req, res) => {
         if (err)
             console.log("no maidens for you")
         else {
-            const users = await getPeople(decoded.user, await database())
+            const users = await getPeople(decoded.user, db)
             res.json(users)
         }
     })
