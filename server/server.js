@@ -81,6 +81,7 @@ app.get('/sessionCheck', async (req, res) => {
             res.send({sessionExists: true})
     })
 })
+
 app.get("/getPeople", async (req, res) => {
     const authHeader = req.headers['authorization']
     const token = authHeader && authHeader.split(' ')[1]
@@ -89,18 +90,24 @@ app.get("/getPeople", async (req, res) => {
             console.log("no maidens for you")
         else {
             const users = await getPeople(decoded.user, db)
+            console.log(users)
             res.json(users)
         }
     })
 
 })
+
 app.get("/currentUser", async (req, res) => {
     const authHeader = req.headers['authorization']
     const token = authHeader && authHeader.split(' ')[1]
-    jwt.verify(token, 'secret', {}, (err, decoded) => {
+    jwt.verify(token, 'secret', {}, async (err, decoded) => {
         if (err)
             console.log("no current user")
-        else
+        else {
+            const [interests, fields] = await db.execute("SELECT interest FROM user_interests WHERE user_id = ?", [decoded.user.user_id])
+            decoded.user.interests = interests;
             res.send(decoded.user)
+        }
     })
 })
+

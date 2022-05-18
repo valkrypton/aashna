@@ -24,13 +24,24 @@
       <i class="fa fa-heart"></i>
     </div>
     <div class="tinder--cards">
-      <div v-for="user in users" :key="user.user_id" class="tinder--card">
-        <div style="position: absolute;">
+      <div v-for="user in users" :key="user.user_id" class="tinder--card" data-mdb-perfect-scrollbar='true'>
+        <div class="pic-info" style="position: absolute;">
           <img width="300" height="400" :src="user.img_url" >
           <h3 style="position: fixed; top: 260px">{{ user.fname }}, {{ user.age }}</h3>
-          <h3 style="position: fixed; top: 300px">{{ user.school }}</h3>
-          <h3 style="position: fixed; top: 330px">{{ user.batch }}</h3>
-          <p>{{ user.bio }}</p>
+          <h3 style="position: fixed; top: 300px; font-size: 1.5rem">{{ user.school }}</h3>
+          <h3 style="position: fixed; top: 330px; font-size: 1.5rem">{{ user.batch }}</h3>
+          <div class="card-section">
+            <span class="title">Bio</span>
+            <p style="font-weight: bold">{{ user.bio }}</p>
+          </div>
+          <div class="card-section">
+            <span class="title">Interests</span>
+            <div class="interests">
+              <div v-for="interest in user.interests" :key="interest">
+                <p class="btn btn-light interests-item" >{{ interest.interest}}</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -43,16 +54,16 @@
 </template>
 
 <script setup>
-import hammer from "../hammerjs.js"
+import Hammer from "../hammerjs.js"
 import {onBeforeMount, onMounted, onUpdated, ref, watch} from "vue";
 import axios from "axios";
 import {useRouter} from "vue-router";
 import NavBarHome from "@/components/NavBarHome";
 
 
-const user = ref(null)
+const user = ref({user_id: "", fname: "", school: "", batch: "", bio: "", interests: [{interest: ""}], img_url: ""})
 const img_url = ref('')
-const users = ref([])
+const users = ref([{user_id: "", fname: "", school: "", batch: "", bio: "", interests: [{interest: ""}], img_url: ""}])
 const router = useRouter()
 
 function logout() {
@@ -61,6 +72,7 @@ function logout() {
 }
 
 onBeforeMount(() => {
+
   const token = localStorage.getItem("jwt")
   if (token != null) {
     axios.get("http://localhost:3000/currentUser", {
@@ -85,6 +97,19 @@ onBeforeMount(() => {
         for (let i = 0; i < response.data.length; ++i) {
           users.value[i].img_url = "http://localhost:3000/" + users.value[i].img_url
         }
+        function comp (interest){
+            return !!user.value.interests.find((u_interest) => {
+              return u_interest.interest === interest.interest;
+            });
+
+        }
+        users.value.sort((x,y) => {
+          if((x.interests.filter(comp).length > y.interests.filter(comp).length))
+            return -1;
+          else
+            return 1;
+        })
+
       }
     })
   }
@@ -98,14 +123,15 @@ onMounted(() => {
 })
 
 onUpdated(() => {
-  var tinderContainer = document.querySelector('.tinder');
-  var allCards = document.querySelectorAll('.tinder--card');
-  console.log(allCards.length)
-  var nope = document.getElementById('nope');
-  var love = document.getElementById('love');
+
+  let tinderContainer = document.querySelector('.tinder');
+  let allCards = document.querySelectorAll('.tinder--card');
+
+  let nope = document.getElementById('nope');
+  let love = document.getElementById('love');
 
   function initCards(card, index) {
-    var newCards = document.querySelectorAll('.tinder--card:not(.removed)');
+    let newCards = document.querySelectorAll('.tinder--card:not(.removed)');
     newCards.forEach(function (card, index) {
       card.style.zIndex = allCards.length - index;
       card.style.transform = 'scale(' + (20 - index) / 20 + ') translateY(-' + 30 * index + 'px)';
@@ -117,7 +143,7 @@ onUpdated(() => {
   initCards();
 
   allCards.forEach(function (el) {
-    var hammertime = new Hammer(el);
+    let hammertime = new Hammer(el);
 
     hammertime.on('pan', function (event) {
       el.classList.add('moving');
@@ -130,9 +156,9 @@ onUpdated(() => {
       tinderContainer.classList.toggle('tinder_love', event.deltaX > 0);
       tinderContainer.classList.toggle('tinder_nope', event.deltaX < 0);
 
-      var xMulti = event.deltaX * 0.03;
-      var yMulti = event.deltaY / 80;
-      var rotate = xMulti * yMulti;
+      let xMulti = event.deltaX * 0.03;
+      let yMulti = event.deltaY / 80;
+      let rotate = xMulti * yMulti;
 
       el.style.transform = 'translate(' + event.deltaX + 'px, ' + event.deltaY + 'px) rotate(' + rotate + 'deg)';
     });
@@ -142,21 +168,21 @@ onUpdated(() => {
       tinderContainer.classList.remove('tinder_love');
       tinderContainer.classList.remove('tinder_nope');
 
-      var moveOutWidth = document.body.clientWidth;
-      var keep = Math.abs(event.deltaX) < 80 || Math.abs(event.velocityX) < 0.5;
+      let moveOutWidth = document.body.clientWidth;
+      let keep = Math.abs(event.deltaX) < 80 || Math.abs(event.velocityX) < 0.5;
 
       el.classList.toggle('removed', !keep);
 
       if (keep) {
         el.style.transform = '';
       } else {
-        var endX = Math.max(Math.abs(event.velocityX) * moveOutWidth, moveOutWidth);
-        var toX = event.deltaX > 0 ? endX : -endX;
-        var endY = Math.abs(event.velocityY) * moveOutWidth;
-        var toY = event.deltaY > 0 ? endY : -endY;
-        var xMulti = event.deltaX * 0.03;
-        var yMulti = event.deltaY / 80;
-        var rotate = xMulti * yMulti;
+        let endX = Math.max(Math.abs(event.velocityX) * moveOutWidth, moveOutWidth);
+        let toX = event.deltaX > 0 ? endX : -endX;
+        let endY = Math.abs(event.velocityY) * moveOutWidth;
+        let toY = event.deltaY > 0 ? endY : -endY;
+        let xMulti = event.deltaX * 0.03;
+        let yMulti = event.deltaY / 80;
+        let rotate = xMulti * yMulti;
 
         el.style.transform = 'translate(' + toX + 'px, ' + (toY + event.deltaY) + 'px) rotate(' + rotate + 'deg)';
         initCards();
@@ -166,12 +192,12 @@ onUpdated(() => {
 
   function createButtonListener(love) {
     return function (event) {
-      var cards = document.querySelectorAll('.tinder--card:not(.removed)');
-      var moveOutWidth = document.body.clientWidth * 1.5;
+      let cards = document.querySelectorAll('.tinder--card:not(.removed)');
+      let moveOutWidth = document.body.clientWidth * 1.5;
 
       if (!cards.length) return false;
 
-      var card = cards[0];
+      let card = cards[0];
 
       card.classList.add('removed');
 
@@ -201,7 +227,6 @@ onUpdated(() => {
 body {
   background-color: #FFF5FA;
 }
-
 
 
 .navigation {
@@ -255,8 +280,8 @@ body {
 
 
 .tinder {
-  width: 100vw;
-  height: 100vh;
+  width: 98.9vw;
+  height: 89vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -310,18 +335,20 @@ body {
 }
 
 .tinder--card {
+  background-color: var(--complementary-color);
   display: inline-block;
   width: 30vw;
   max-width: 600px;
   height: 70vh;
-  background: #FFFFFF;
   padding-bottom: 40px;
   border-radius: 8px;
-  overflow: hidden;
+  overflow-y: scroll;
   position: absolute;
   will-change: transform;
   transition: all 0.3s ease-in-out;
   cursor: grab;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .moving.tinder--card {
@@ -342,12 +369,7 @@ body {
   pointer-events: none;
 }
 
-.tinder--card p {
-  margin-top: 24px;
-  font-size: 20px;
-  padding: 0 16px;
-  pointer-events: none;
-}
+
 
 .tinder--buttons {
   flex: 0 0 100px;
@@ -381,4 +403,46 @@ body {
 .fa-remove {
   color: #CDD6DD;
 }
+
+.pic-info h3{
+  color: white;
+  font-weight: bold;
+}
+.card-section{
+  margin-top: 2%;
+  font-size: 20px;
+  padding: 0 16px;
+  pointer-events: none;
+  text-align: left;
+}
+
+.card-section .title{
+  color: gray;
+  font-size: 1.2rem
+}
+
+.interests {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.interests-item {
+  margin: 5px 5px 5px 0;
+  border: 1px solid;
+  font-weight: 600;
+}
+
+
+.btn-light {
+  background-color: var(--bg-color);
+  color: black;
+  border: transparent;
+  border-radius: 5%;
+}
+
+.btn-light:hover {
+  background-color: #ffd1e8;
+}
+
 </style>

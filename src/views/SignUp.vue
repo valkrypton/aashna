@@ -223,9 +223,7 @@ for (let i = 0; i < 8; i++) {
 }
 
 function check(e) {
-  if (interests.value.filter(i => i.checked).length >= 8) {
-    e.target.checked = false;
-  }
+  e.target.checked = interests.value.filter(i => i.checked).length < 8;
 }
 
 function showImg(e) {
