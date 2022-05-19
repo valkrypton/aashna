@@ -1,4 +1,4 @@
-export const checkEmailValidity=( email)=> {
+export const checkEmailValidity = ( email)=> {
     return email.slice(email.length - 20, email.length)
         === "@student.nust.edu.pk" && email.length > 20;
 }

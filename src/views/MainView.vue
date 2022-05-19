@@ -45,6 +45,7 @@
         </div>
       </div>
     </div>
+
     <div class="tinder--buttons">
       <button id="nope"><i class="fa fa-remove"></i></button>
       <button id="love"><i class="fa fa-heart"></i></button>
@@ -59,6 +60,7 @@ import {onBeforeMount, onMounted, onUpdated, ref, watch} from "vue";
 import axios from "axios";
 import {useRouter} from "vue-router";
 import NavBarHome from "@/components/NavBarHome";
+import {rightSwipe} from "../../server/api/swiping";
 
 
 const user = ref({user_id: "", fname: "", school: "", batch: "", bio: "", interests: [{interest: ""}], img_url: ""})
@@ -69,6 +71,30 @@ const router = useRouter()
 function logout() {
   localStorage.removeItem('jwt')
   router.push('/')
+}
+
+function recordLeftSwipe(swiper, swipee){
+  const token = localStorage.getItem("jwt");
+  console.log(swiper + " => " + swipee)
+  axios.post("http://localhost:3000/leftSwipe", {"swiper": swiper, "swipee": swipee}, {
+    headers: {
+      Authorization: "Bearer " + token
+    }
+  }).then(response => {
+
+  })
+}
+
+function recordRightSwipe(swiper, swipee){
+  const token = localStorage.getItem("jwt");
+  console.log(swiper + " => " + swipee)
+  axios.post("http://localhost:3000/rightSwipe", {"swiper": swiper, "swipee": swipee}, {
+    headers: {
+      Authorization: "Bearer " + token
+    }
+  }).then(response => {
+
+  })
 }
 
 onBeforeMount(() => {
@@ -203,8 +229,12 @@ onUpdated(() => {
 
       if (love) {
         card.style.transform = 'translate(' + moveOutWidth + 'px, -100px) rotate(-30deg)';
+        recordRightSwipe(user.value.user_id, users.value[0].user_id);
+        users.value.shift()
       } else {
         card.style.transform = 'translate(-' + moveOutWidth + 'px, -100px) rotate(30deg)';
+        recordLeftSwipe(user.value.user_id, users.value[0].user_id);
+        users.value.shift();
       }
 
       initCards();
