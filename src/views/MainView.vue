@@ -73,10 +73,9 @@ function logout() {
   router.push('/')
 }
 
-function recordLeftSwipe(swiper, swipee){
+function recordLeftSwipe(swipee){
   const token = localStorage.getItem("jwt");
-  console.log(swiper + " => " + swipee)
-  axios.post("http://localhost:3000/leftSwipe", {"swiper": swiper, "swipee": swipee}, {
+  axios.post("http://localhost:3000/leftSwipe", {"swipee": swipee}, {
     headers: {
       Authorization: "Bearer " + token
     }
@@ -85,10 +84,9 @@ function recordLeftSwipe(swiper, swipee){
   })
 }
 
-function recordRightSwipe(swiper, swipee){
+function recordRightSwipe(swipee){
   const token = localStorage.getItem("jwt");
-  console.log(swiper + " => " + swipee)
-  axios.post("http://localhost:3000/rightSwipe", {"swiper": swiper, "swipee": swipee}, {
+  axios.post("http://localhost:3000/rightSwipe", {"swipee": swipee}, {
     headers: {
       Authorization: "Bearer " + token
     }
@@ -229,11 +227,11 @@ onUpdated(() => {
 
       if (love) {
         card.style.transform = 'translate(' + moveOutWidth + 'px, -100px) rotate(-30deg)';
-        recordRightSwipe(user.value.user_id, users.value[0].user_id);
+        recordRightSwipe(users.value[0].user_id);
         users.value.shift()
       } else {
         card.style.transform = 'translate(-' + moveOutWidth + 'px, -100px) rotate(30deg)';
-        recordLeftSwipe(user.value.user_id, users.value[0].user_id);
+        recordLeftSwipe(users.value[0].user_id);
         users.value.shift();
       }
 

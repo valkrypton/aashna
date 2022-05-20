@@ -25,7 +25,7 @@ let db
 
 app.use(express.static("imgs"))
 // parse application/x-www-form-urlencoded
-app.use(bodyParser.urlencoded({ extended: false }))
+app.use(bodyParser.urlencoded({extended: false}))
 
 // parse application/json
 app.use(bodyParser.json())
@@ -60,26 +60,34 @@ app.get("/verifycode", (req, res) => {
 
 app.post('/registerUser', upload.single("profile_img"), async (req, res) => {
         req.file.path = req.body.email + ".jpeg"
-        await registerUser(db, req, res)
-        res.json({registered: true})
+        if(await registerUser(db, req, res)) {
+            res.json({registered: true})
+        }
+        else{
+            res.sendStatus(500);
+        }
     }
 )
 
 app.post('/login', upload.none(), async (req, res) => {
     if (await checkIfUserExists(db, req.body.email)) {
-        const user = await verifyPassword(db, req, res)
-        if (user) {
+        let user;
+        if ((user = await verifyPassword(db, req, res))) {
             jwt.sign({user: user}, 'secret', {expiresIn: '23h'},
                 (err, token) => {
                     if (err) {
                         console.log(err)
-                        res.sendStatus(500)
+                        res.sendStatus(401)
                     } else {
                         res.send(token)
                     }
                 }
             )
+        } else {
+            res.sendStatus(403)
         }
+    } else {
+        res.sendStatus(400);
     }
 })
 
@@ -89,9 +97,8 @@ app.get('/sessionCheck', async (req, res) => {
     jwt.verify(token, 'secret', {}, (err, decoded) => {
         if (err) {
             console.log("no sessions")
-            res.sendStatus(500);
-        }
-        else
+            res.sendStatus(401);
+        } else
             res.send({sessionExists: true})
     })
 })
@@ -102,11 +109,14 @@ app.get("/getPeople", async (req, res) => {
     jwt.verify(token, 'secret', {}, async (err, decoded) => {
         if (err) {
             console.log("no maidens for you");
-            res.sendStatus(500);
-        }
-        else {
-            const users = await getPeople(decoded.user, db)
-            res.json(users)
+            res.sendStatus(401);
+        } else {
+            let users;
+            if ((users = await getPeople(decoded.user, db))) {
+                res.json(users)
+            } else {
+                res.sendStatus(500)
+            }
         }
     })
 
@@ -116,12 +126,10 @@ app.get("/currentUser", async (req, res) => {
     const authHeader = req.headers['authorization']
     const token = authHeader && authHeader.split(' ')[1]
     jwt.verify(token, 'secret', {}, async (err, decoded) => {
-        if (err){
+        if (err) {
             console.log("err")
-            res.sendStatus(500);
-        }
-
-        else {
+            res.sendStatus(401);
+        } else {
             const [interests, fields] = await db.execute("SELECT interest FROM user_interests WHERE user_id = ?", [decoded.user.user_id])
             decoded.user.interests = interests;
             res.send(decoded.user)
@@ -130,26 +138,34 @@ app.get("/currentUser", async (req, res) => {
 })
 
 app.post("/leftSwipe", async (req, res) => {
-    const swiper = req.body.swiper;
-    const swipee = req.body.swipee;
-    if(await leftSwipe(swiper, swipee, db)){
-        res.sendStatus(200);
-    }
-    else{
-        res.sendStatus(500);
-    }
+    const authHeader = req.headers['authorization']
+    const token = authHeader && authHeader.split(' ')[1]
+    jwt.verify(token, 'secret', {}, async (err, decoded) => {
+        if (err) {
+            console.log(err)
+            res.sendStatus(401);
+        } else {
+            if (await leftSwipe(decoded.user.user_id, req.body.swipee, db)) {
+                res.sendStatus(200);
+            } else {
+                res.sendStatus(500);
+            }
+        }
+    })
 })
 
 app.post("/rightSwipe", async (req, res) => {
-    console.log(req.body)
-    const swiper = req.body.swiper;
-    const swipee = req.body.swipee;
-
-
-    if(await rightSwipe(swiper, swipee, db)){
-        res.sendStatus(200);
-    }
-    else{
-        res.sendStatus(500);
-    }
+    const authHeader = req.headers['authorization']
+    const token = authHeader && authHeader.split(' ')[1]
+    jwt.verify(token, 'secret', {}, async (err, decoded) => {
+        if (err) {
+            res.sendStatus(401);
+        } else {
+            if (await rightSwipe(decoded.user.user_id, req.body.swipee, db)) {
+                res.sendStatus(200);
+            } else {
+                res.sendStatus(500);
+            }
+        }
+    })
 })
