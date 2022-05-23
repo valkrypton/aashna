@@ -78,8 +78,9 @@
         <i class="fa fa-heart"></i>
       </div>
       <div class="tinder--cards">
-        <div v-for="user in users" :key="user.user_id" class="tinder--card" data-mdb-perfect-scrollbar='true'>
-          <div :id="user.user_id" class="pic-info" style="position: absolute;">
+        <div v-for="user in users" :key="user.user_id" :id="user.user_id" class="tinder--card"
+             data-mdb-perfect-scrollbar='true'>
+          <div class="pic-info" style="position: absolute;">
             <img width="300" height="400" :src="user.img_url">
             <h3 style="position: fixed; top: 260px">{{ user.fname }}, {{ user.age }}</h3>
             <h3 style="position: fixed; top: 300px; font-size: 1.5rem">{{ user.school }}</h3>
@@ -131,6 +132,32 @@ function logout() {
   router.push('/')
 }
 
+function recordSwipes() {
+  let lefts = document.querySelectorAll(".left");
+  for(let i = 0; i < lefts.length; ++i){
+    if (users.value.find(u => {
+      return u.user_id == lefts[i].id;
+    })) {
+      recordLeftSwipe(lefts[i].id);
+      users.value = users.value.filter(x => x.user_id !== lefts[i].id);
+    }
+    lefts[i].remove();
+  }
+
+
+  let rights = document.querySelectorAll(".right");
+  for(let i = 0; i < rights.length; ++i){
+    if (users.value.find(u => {
+      return u.user_id == rights[i].id;
+    })) {
+      recordRightSwipe(rights[i].id);
+      users.value = users.value.filter(x => x.user_id !== rights[i].id);
+    }
+    rights[i].remove();
+  }
+
+}
+
 function recordLeftSwipe(swipee) {
   const token = localStorage.getItem("jwt");
   axios.post("http://localhost:3000/leftSwipe", {"swipee": swipee}, {
@@ -152,9 +179,11 @@ function recordRightSwipe(swipee) {
 
   })
 }
-function renderMsgs(){
+
+function renderMsgs() {
   renderMessages.value = true
 }
+
 onBeforeMount(() => {
 
   const token = localStorage.getItem("jwt")
@@ -209,117 +238,116 @@ onMounted(() => {
 })
 
 onUpdated(() => {
+  if (!renderMessages.value) {
 
-  let tinderContainer = document.querySelector('.tinder');
-  let allCards = document.querySelectorAll('.tinder--card');
+    let tinderContainer = document.querySelector('.tinder');
+    let allCards = document.querySelectorAll('.tinder--card');
 
-  let nope = document.getElementById('nope');
-  let love = document.getElementById('love');
+    let nope = document.getElementById('nope');
+    let love = document.getElementById('love');
 
-  function initCards(card, index) {
-    let newCards = document.querySelectorAll('.tinder--card:not(.removed)');
-    newCards.forEach(function (card, index) {
-      card.style.zIndex = allCards.length - index;
-      card.style.transform = 'scale(' + (20 - index) / 20 + ') translateY(-' + 30 * index + 'px)';
-      card.style.opacity = (10 - index) / 10;
-    });
-    tinderContainer.classList.add('loaded');
-  }
+    function initCards(card, index) {
+      recordSwipes();
+      let newCards = document.querySelectorAll('.tinder--card:not(.removed)');
+      newCards.forEach(function (card, index) {
+        card.style.zIndex = allCards.length - index;
+        card.style.transform = 'scale(' + (20 - index) / 20 + ') translateY(-' + 30 * index + 'px)';
+        card.style.opacity = (10 - index) / 10;
+      });
+      tinderContainer.classList.add('loaded');
+    }
 
-  initCards();
+    initCards();
 
-  allCards.forEach(function (el) {
-    let mc = new Hammer.Manager(el);
-    mc.destroy();
-    let hammertime = new Hammer(el);
+    allCards.forEach(function (el) {
+      let hammertime = new Hammer(el);
 
-    hammertime.on('pan', function (event) {
-      el.classList.add('moving');
-    });
+      hammertime.on('pan', function (event) {
+        el.classList.add('moving');
+      });
 
-    hammertime.on('pan', function (event) {
-      if (event.deltaX === 0) return;
-      if (event.center.x === 0 && event.center.y === 0) return;
+      hammertime.on('pan', function (event) {
+        if (event.deltaX === 0) return;
+        if (event.center.x === 0 && event.center.y === 0) return;
 
-      tinderContainer.classList.toggle('tinder_love', event.deltaX > 0);
-      tinderContainer.classList.toggle('tinder_nope', event.deltaX < 0);
+        tinderContainer.classList.toggle('tinder_love', event.deltaX > 0);
+        tinderContainer.classList.toggle('tinder_nope', event.deltaX < 0);
 
-      let xMulti = event.deltaX * 0.03;
-      let yMulti = event.deltaY / 80;
-      let rotate = xMulti * yMulti;
-
-      el.style.transform = 'translate(' + event.deltaX + 'px, ' + event.deltaY + 'px) rotate(' + rotate + 'deg)';
-    });
-
-    hammertime.handlers.panend = [function (event) {
-      console.log("yas")
-      el.classList.remove('moving');
-      tinderContainer.classList.remove('tinder_love');
-      tinderContainer.classList.remove('tinder_nope');
-
-      let moveOutWidth = document.body.clientWidth;
-      let keep = Math.abs(event.deltaX) < 80 || Math.abs(event.velocityX) < 0.5;
-
-      el.classList.toggle('removed', !keep);
-
-      if (keep) {
-        el.style.transform = '';
-      } else {
-        let endX = Math.max(Math.abs(event.velocityX) * moveOutWidth, moveOutWidth);
-        let toX = event.deltaX > 0 ? endX : -endX;
-        let endY = Math.abs(event.velocityY) * moveOutWidth;
-        let toY = event.deltaY > 0 ? endY : -endY;
         let xMulti = event.deltaX * 0.03;
         let yMulti = event.deltaY / 80;
         let rotate = xMulti * yMulti;
 
-        el.style.transform = 'translate(' + toX + 'px, ' + (toY + event.deltaY) + 'px) rotate(' + rotate + 'deg)';
+        el.style.transform = 'translate(' + event.deltaX + 'px, ' + event.deltaY + 'px) rotate(' + rotate + 'deg)';
+      });
 
-        initCards();
+      hammertime.handlers.panend = [function (event) {
+        el.classList.remove('moving');
+        tinderContainer.classList.remove('tinder_love');
+        tinderContainer.classList.remove('tinder_nope');
 
-      }
-    }]
+        let moveOutWidth = document.body.clientWidth;
+        let keep = Math.abs(event.deltaX) < 80 || Math.abs(event.velocityX) < 0.5;
 
-  });
+        el.classList.toggle('removed', !keep);
 
-  function createButtonListener(love) {
-    return function (event) {
-      let cards = document.querySelectorAll('.tinder--card:not(.removed)');
-      let moveOutWidth = document.body.clientWidth * 1.5;
+        if (keep) {
+          el.style.transform = '';
+        } else {
+          let endX = Math.max(Math.abs(event.velocityX) * moveOutWidth, moveOutWidth);
+          let toX = event.deltaX > 0 ? endX : -endX;
+          let endY = Math.abs(event.velocityY) * moveOutWidth;
+          let toY = event.deltaY > 0 ? endY : -endY;
+          let xMulti = event.deltaX * 0.03;
+          let yMulti = event.deltaY / 80;
+          let rotate = xMulti * yMulti;
 
-      if (!cards.length) return false;
+          el.style.transform = 'translate(' + toX + 'px, ' + (toY + event.deltaY) + 'px) rotate(' + rotate + 'deg)';
 
-      let card = cards[0];
+          el.classList.toggle('right', event.deltaX > 0);
+          el.classList.toggle('left', event.deltaX < 0);
 
-      card.classList.add('removed');
+          initCards();
 
-      if (love) {
-        card.style.transform = 'translate(' + moveOutWidth + 'px, -100px) rotate(-30deg)';
-        //recordRightSwipe(users.value[0].user_id);
+        }
+      }]
+
+    });
+
+    function createButtonListener(love) {
+      return function (event) {
+        let cards = document.querySelectorAll('.tinder--card:not(.removed)');
+        let moveOutWidth = document.body.clientWidth * 1.5;
+
+        if (!cards.length) return false;
+
+        let card = cards[0];
+
+        card.classList.add('removed');
+
+        if (love) {
+          card.style.transform = 'translate(' + moveOutWidth + 'px, -100px) rotate(-30deg)';
+          card.classList.add("right")
+
+        } else {
+          card.style.transform = 'translate(-' + moveOutWidth + 'px, -100px) rotate(30deg)';
+          card.classList.add("left")
+        }
+
         setTimeout(() => {
-          users.value.shift();
+          initCards();
         }, 200)
 
-      } else {
-        card.style.transform = 'translate(-' + moveOutWidth + 'px, -100px) rotate(30deg)';
-        //recordLeftSwipe(users.value[0].user_id);
-        setTimeout(() => {
-          users.value.shift();
-        }, 200)
-      }
+        event.preventDefault();
+      };
+    }
 
-      initCards();
+    let nopeListener = createButtonListener(false);
+    let loveListener = createButtonListener(true);
 
-      event.preventDefault();
-    };
+    nope.onclick = nopeListener;
+    love.onclick = loveListener;
+
   }
-
-  let nopeListener = createButtonListener(false);
-  let loveListener = createButtonListener(true);
-
-  nope.onclick = nopeListener;
-  love.onclick = loveListener;
-
 })
 
 </script>
@@ -330,18 +358,6 @@ body {
 }
 
 
-.navigation {
-  top: 0;
-  z-index: 10;
-  position: sticky;
-  font-weight: bold;
-  width: 100%;
-  height: 3rem;
-  background-color: white;
-  display: inline-flex;
-  text-align: center;
-}
-
 .navigation img {
   width: 40px;
   height: 40px;
@@ -349,35 +365,6 @@ body {
   margin-top: 0.3%;
 }
 
-.nav-uname {
-  margin-left: 0.5%;
-  margin-top: auto;
-  margin-bottom: auto;
-  color: var(--secondary-color);
-}
-
-.nav-brand {
-  color: var(--main-color);
-  font-size: 1.6rem;
-  margin: auto;
-}
-
-.nav-logout {
-  margin-right: 1%;
-  margin-top: auto;
-  margin-bottom: auto;
-  cursor: pointer;
-}
-
-.nav-logout:hover {
-  color: var(--main-color);
-}
-
-/**, *:before, *:after {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-}*/
 
 .main {
   display: grid;
