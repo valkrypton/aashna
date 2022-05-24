@@ -48,6 +48,7 @@ const checkIfUserExists = async (db, email) => {
 
 const registerUser = async (db, req, res) => {
     try {
+        console.log(req.file.path)
         await db.execute('INSERT INTO user VALUES(null,?,?,?,?,?,?,?,?,?,?,?)',
             [req.body.email, await bcrypt.hash(req.body.password, 5), req.body.first_name, req.body.last_name,
                 req.body.bio, 20, req.body.school, req.body.batch, Number(req.body.gender),
@@ -59,6 +60,7 @@ const registerUser = async (db, req, res) => {
             await db.execute('INSERT INTO user_interests values(?,?)', [Number(rows[0].user_id), req.body.interests[i]])
         return true;
     } catch (err) {
+        console.log(err)
         return false;
     }
 }

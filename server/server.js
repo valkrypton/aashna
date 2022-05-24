@@ -23,6 +23,8 @@ const {
 const getPeople = require("./api/getPeople");
 const {leftSwipe, rightSwipe} = require("./api/swiping");
 const {json} = require("express");
+const {getLogger} = require("nodemailer/lib/shared");
+const {retrieve_messages, log_message} = require("./api/messaging");
 let db
 (async () => {
     db = await database()
@@ -63,6 +65,7 @@ io.use(function(socket, next){
         socket.join(socket.decoded.user.user_id);
 
         socket.on("private_message", ({content, to}) => {
+            log_message(socket.decoded.user.user_id, to, content, db);
             socket.to(to).to(socket.decoded.user.user_id).emit("private message", {
                 content,
                 from: socket.decoded.user.user_id,
@@ -90,15 +93,29 @@ app.get("/verifycode", (req, res) => {
 
 app.post('/registerUser', upload.single("profile_img"),
     async (req, res) => {
-        if (await checkIfUserExists(db, req.body.email)) {
+        if (!(await checkIfUserExists(db, req.body.email))) {
             req.file.path = req.body.email + ".jpeg"
             if (await registerUser(db, req, res)) {
-                res.json({registered: true})
+                const [rows,fields] = await db.execute("SELECT * FROM user WHERE email = ?",[req.body.email]);
+                const user = rows[0];
+                delete user.password;
+                jwt.sign({user: user}, 'secret', {expiresIn: '23h'},
+                    (err, token) => {
+                        if (err) {
+                            console.log(err)
+                            res.sendStatus(401)
+                        } else {
+                            res.json({token: token})
+                        }
+                    }
+                )
             } else {
                 res.sendStatus(500);
             }
-        } else
+        } else {
+            res.status(403);
             res.json({userExists: false})
+        }
     }
 )
 
@@ -221,6 +238,25 @@ app.post("/rightSwipe", upload.none(), async (req, res) => {
                 res.sendStatus(500);
             }
         }
+    })
+})
+
+app.get("/retrieve_messages", async (req, res) => {
+    const authHeader = req.headers['authorization']
+    const token = authHeader && authHeader.split(' ')[1]
+    jwt.verify(token, 'secret', {}, async (err, decoded) => {
+      if(err){
+          res.send(401);
+      }
+      else{
+          let msgs;
+          if((msgs = await retrieve_messages(decoded.user.user_id, req.query.id, db))){
+              res.json(msgs);
+          }
+          else{
+              res.sendStatus(500);
+          }
+      }
     })
 })
 

@@ -6,26 +6,28 @@
     </div>
     <div class="px-4 py-5 chat-box">
       <!-- Sender Message-->
-      <div class="media w-25 mb-3 them-container">
-        <img src="https://bootstrapious.com/i/snippets/sn-chat/avatar.svg" alt="user" width="50" class="rounded-circle">
-        <div class="media-body ml-3">
-          <div class="bg-light rounded-pill bg-white py-2 px-3 mb-2">
-            <p class="text-small mb-0 text-muted">Test which is a new approach all solutions</p>
+      <template v-for="msg in all_msgs">
+        <div v-if="msg.sender === receiverID" class="media mb-3 them-container">
+          <img src="https://bootstrapious.com/i/snippets/sn-chat/avatar.svg" alt="user" width="50"
+               class="rounded-circle">
+          <div class="media-body ml-3">
+            <div class="bg-light rounded-pill bg-white py-2 px-3 mb-2">
+              <p class="text-small mb-0 text-muted">{{ msg.content }}</p>
+            </div>
+            <p class="small text-muted timestamp">{{ new Date(msg.timestamp) }}</p>
           </div>
-          <p class="small text-muted timestamp">12:00 PM | Aug 13</p>
         </div>
-      </div>
 
-      <!-- Reciever Message-->
-      <div class="media w-25 us-container mb-3">
-        <div class="media-body us-container">
-          <div class="bg-primary rounded-pill py-2 px-3 mb-2">
-            <p class="text-small mb-0 text-white">Test which is a new approach to have all solutions</p>
+        <!-- Reciever Message-->
+        <div v-else class="media w-25 us-container mb-3">
+          <div class="media-body us-container">
+            <div class="bg-primary rounded-pill py-2 px-3 mb-2">
+              <p class="text-small mb-0 text-white">{{ msg.content }}</p>
+            </div>
+            <p class="small text-muted timestamp">{{}}</p>
           </div>
-          <p class="small text-muted timestamp">12:00 PM | Aug 13</p>
         </div>
-      </div>
-
+      </template>
     </div>
 
     <!-- Typing area -->
@@ -48,7 +50,12 @@
 </template>
 
 <script setup>
-import {onMounted, onUnmounted, ref} from "vue";
+import {onBeforeMount, onMounted, onUnmounted, ref} from "vue";
+import axios from "axios";
+
+const ours = ref([]);
+const theirs = ref([]);
+let all_msgs = ref([]);
 
 const props = defineProps({
   senderID: Number,
@@ -70,14 +77,30 @@ function sendMsg() {
     content: msg.value,
     to: props.receiverID
   })
+  all_msgs.value.push({sender: props.senderID, receiver: props.receiverID, content: msg.value});
 }
 
 socket.on('private message', ({content, from, to}) => {
-  console.log(content)
+  all_msgs.value.push({sender: from, receiver: to, content: content, timestamp: new Date()});
 })
+
+axios.get("http://localhost:3000/retrieve_messages?id=" + props.receiverID, {
+  headers: {
+    Authorization: "Bearer " + token
+  }
+}).then(response => {
+  if (response.data) {
+    all_msgs.value = response.data;
+    console.log(all_msgs.value)
+  } else
+    console.log("no user returned")
+})
+
 onUnmounted(() => {
-  socket.disconnect()
+  socket.disconnect();
+
 })
+
 </script>
 
 <style scoped>

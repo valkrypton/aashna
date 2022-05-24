@@ -177,14 +177,17 @@ function getCode() {
 }
 
 function submitForm() {
+  console.log("AAAAAAAAAAAAA")
   const fd = new FormData(form.value)
   axios.post(baseURL + '/registerUser', fd, {
     headers: {
       'content-type': 'multipart/form-data'
     }
   }).then(response => {
-    if (response.data.registered)
-      router.push('/home')
+    if (response.data.token) {
+      localStorage.setItem("jwt", response.data.token);
+      router.push('/home');
+    }
   }).catch(err => {
     console.log(err)
   })

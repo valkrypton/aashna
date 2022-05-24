@@ -92,8 +92,8 @@ import {onBeforeMount, onMounted, onUpdated, ref, watch} from "vue";
 import axios from "axios";
 import {useRouter} from "vue-router";
 import NavBarHome from "@/components/NavBarHome";
-import {rightSwipe} from "../../server/api/swiping";
 import Messages from "@/components/Messages";
+
 
 const baseURL = 'http://localhost:3000'
 const user = ref({user_id: "", fname: "", school: "", batch: "", bio: "", interests: [{interest: ""}], img_url: ""})
@@ -126,7 +126,7 @@ function recordSwipes() {
   let rights = document.querySelectorAll(".right");
   for (let i = 0; i < rights.length; ++i) {
     if (users.value.find(u => {
-      return u.user_id === rights[i].id;
+      return u.user_id == rights[i].id;
     })) {
       recordRightSwipe(rights[i].id);
       users.value = users.value.filter(x => x.user_id !== rights[i].id);
@@ -154,7 +154,17 @@ function recordRightSwipe(swipee) {
       Authorization: "Bearer " + token
     }
   }).then(response => {
-
+    axios.get('http://localhost:3000/matchedUsers', {
+      headers: {
+        Authorization: 'Bearer ' + token
+      }
+    }).then(response => {
+      if (response.data) {
+        matchedUsers.value = response.data
+      }
+    }).catch(err => {
+      console.log(err.message)
+    })
   })
 }
 
@@ -186,6 +196,7 @@ onBeforeMount(() => {
     }).then(response => {
       if (response.data) {
         users.value = response.data
+
         for (let i = 0; i < response.data.length; ++i) {
           users.value[i].img_url = "http://localhost:3000/" + users.value[i].img_url
         }

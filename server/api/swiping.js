@@ -4,6 +4,7 @@ const leftSwipe = async (swiper, swipee, db) => {
 }
 
 const rightSwipe = async (swiper, swipee, db) => {
+    console.log(swiper + " => " + swipee)
     await db.execute("INSERT INTO user_swiped_right_on VALUES(?, ?, ?)", [swiper, swipee, new Date()])
     return true;
 }
