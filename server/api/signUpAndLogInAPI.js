@@ -58,7 +58,7 @@ const registerUser = async (db, req, res) => {
         for (let i = 0; i < req.body.interests.length; ++i)
             await db.execute('INSERT INTO user_interests values(?,?)', [Number(rows[0].user_id), req.body.interests[i]])
         return true;
-    } catch (err){
+    } catch (err) {
         return false;
     }
 }

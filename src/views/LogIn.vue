@@ -69,9 +69,14 @@ function login() {
         'content-type': 'multipart/form-data'
       }
     }).then(response => {
-      console.log(response.data)
-      localStorage.setItem('jwt', response.data)
-      router.push('/home')
+      if (response.data.token != null && response.data.userExists && response.data.validPw) {
+        localStorage.setItem('jwt', response.data.token)
+        router.push('/home')
+      } else if (response.data.userExists && !response.data.validPw) {
+        incorrectPass.value = true
+      } else if (!response.data.userExists) {
+        userExists.value = false
+      }
     }).catch(err => {
       console.log(err)
     })

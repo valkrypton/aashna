@@ -29,41 +29,17 @@
 
           <div class="messages-box">
             <div class="list-group rounded-0">
-              <a @click="renderMsgs" class="list-group-item list-group-item-action active text-white rounded-0">
-                <div class="media"><img src="https://bootstrapious.com/i/snippets/sn-chat/avatar.svg" alt="user"
-                                        width="50" class="rounded-circle">
+              <a v-for="user in matchedUsers" :key="user.user_id" @click="renderMsgs(user.user_id)"
+                 class="list-group-item list-group-item-action active text-white rounded-0">
+                <div class="media"><img :src="baseURL+'/'+user.img_url" alt="user"
+                                        width="50" height="50" class="rounded-circle">
                   <div class="media-body ml-4">
                     <div class="d-flex align-items-center justify-content-between mb-1">
-                      <h6 class="mb-0">Jason Doe</h6><small class="small font-weight-bold">25 Dec</small>
+                      <h6 class="mb-0">{{ user.fname }} {{ user.lname }}</h6><small class="small font-weight-bold">25
+                      Dec</small>
                     </div>
                     <p class="font-italic mb-0 text-small">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed
                       do eiusmod tempor incididunt ut labore.</p>
-                  </div>
-                </div>
-              </a>
-
-              <a href="#" class="list-group-item list-group-item-action list-group-item-light rounded-0">
-                <div class="media"><img src="https://bootstrapious.com/i/snippets/sn-chat/avatar.svg" alt="user"
-                                        width="50" class="rounded-circle">
-                  <div class="media-body ml-4">
-                    <div class="d-flex align-items-center justify-content-between mb-1">
-                      <h6 class="mb-0">Jason Doe</h6><small class="small font-weight-bold">14 Dec</small>
-                    </div>
-                    <p class="font-italic text-muted mb-0 text-small">Lorem ipsum dolor sit amet, consectetur.
-                      incididunt ut labore.</p>
-                  </div>
-                </div>
-              </a>
-
-              <a href="#" class="list-group-item list-group-item-action list-group-item-light rounded-0">
-                <div class="media"><img src="https://bootstrapious.com/i/snippets/sn-chat/avatar.svg" alt="user"
-                                        width="50" class="rounded-circle">
-                  <div class="media-body ml-4">
-                    <div class="d-flex align-items-center justify-content-between mb-1">
-                      <h6 class="mb-0">Jason Doe</h6><small class="small font-weight-bold">9 Nov</small>
-                    </div>
-                    <p class="font-italic text-muted mb-0 text-small">consectetur adipisicing elit, sed do eiusmod
-                      tempor incididunt ut labore.</p>
                   </div>
                 </div>
               </a>
@@ -100,13 +76,12 @@
           </div>
         </div>
       </div>
-
       <div class="tinder--buttons">
         <button id="nope"><i class="fa fa-remove"></i></button>
         <button id="love"><i class="fa fa-heart"></i></button>
       </div>
     </div>
-    <Messages v-else/>
+    <Messages :receiver-i-d="receiver" :sender-i-d="Number(user.user_id)" v-else/>
   </div>
 
 </template>
@@ -120,21 +95,24 @@ import NavBarHome from "@/components/NavBarHome";
 import {rightSwipe} from "../../server/api/swiping";
 import Messages from "@/components/Messages";
 
-
+const baseURL = 'http://localhost:3000'
 const user = ref({user_id: "", fname: "", school: "", batch: "", bio: "", interests: [{interest: ""}], img_url: ""})
 const img_url = ref('')
 const users = ref([{user_id: "", fname: "", school: "", batch: "", bio: "", interests: [{interest: ""}], img_url: ""}])
 const router = useRouter()
 const renderMessages = ref(false)
+const matchedUsers = ref([])
+const receiver = ref(0)
 
 function logout() {
   localStorage.removeItem('jwt')
   router.push('/')
 }
 
+
 function recordSwipes() {
   let lefts = document.querySelectorAll(".left");
-  for(let i = 0; i < lefts.length; ++i){
+  for (let i = 0; i < lefts.length; ++i) {
     if (users.value.find(u => {
       return u.user_id == lefts[i].id;
     })) {
@@ -146,9 +124,9 @@ function recordSwipes() {
 
 
   let rights = document.querySelectorAll(".right");
-  for(let i = 0; i < rights.length; ++i){
+  for (let i = 0; i < rights.length; ++i) {
     if (users.value.find(u => {
-      return u.user_id == rights[i].id;
+      return u.user_id === rights[i].id;
     })) {
       recordRightSwipe(rights[i].id);
       users.value = users.value.filter(x => x.user_id !== rights[i].id);
@@ -180,7 +158,8 @@ function recordRightSwipe(swipee) {
   })
 }
 
-function renderMsgs() {
+function renderMsgs(userid) {
+  receiver.value = userid
   renderMessages.value = true
 }
 
@@ -226,6 +205,17 @@ onBeforeMount(() => {
         })
 
       }
+    })
+    axios.get('http://localhost:3000/matchedUsers', {
+      headers: {
+        Authorization: 'Bearer ' + token
+      }
+    }).then(response => {
+      if (response.data) {
+        matchedUsers.value = response.data
+      }
+    }).catch(err => {
+      console.log(err.message)
     })
   }
 
@@ -356,15 +346,6 @@ onUpdated(() => {
 body {
   background-color: #FFF5FA;
 }
-
-
-.navigation img {
-  width: 40px;
-  height: 40px;
-  margin-left: 1%;
-  margin-top: 0.3%;
-}
-
 
 .main {
   display: grid;
@@ -557,8 +538,7 @@ body {
   font-size: 0.9rem;
 }
 
-.messages-box,
-.chat-box {
+.messages-box {
   cursor: pointer;
   height: 83vh;
   overflow-y: scroll;

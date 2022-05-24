@@ -26,72 +26,58 @@
         </div>
       </div>
 
-      <!-- Sender Message-->
-      <div class="media w-50 mb-3"><img src="https://bootstrapious.com/i/snippets/sn-chat/avatar.svg" alt="user"
-                                        width="50" class="rounded-circle">
-        <div class="media-body ml-3">
-          <div class="bg-light rounded py-2 px-3 mb-2">
-            <p class="text-small mb-0 text-muted">Test, which is a new approach to have</p>
-          </div>
-          <p class="small text-muted">12:00 PM | Aug 13</p>
-        </div>
-      </div>
-
-      <!-- Reciever Message-->
-      <div class="media w-50 ml-auto mb-3">
-        <div class="media-body">
-          <div class="bg-primary rounded py-2 px-3 mb-2">
-            <p class="text-small mb-0 text-white">Apollo University, Delhi, India Test</p>
-          </div>
-          <p class="small text-muted">12:00 PM | Aug 13</p>
-        </div>
-      </div>
-
-      <!-- Sender Message-->
-      <div class="media w-50 mb-3"><img src="https://bootstrapious.com/i/snippets/sn-chat/avatar.svg" alt="user"
-                                        width="50" class="rounded-circle">
-        <div class="media-body ml-3">
-          <div class="bg-light rounded py-2 px-3 mb-2">
-            <p class="text-small mb-0 text-muted">Test, which is a new approach</p>
-          </div>
-          <p class="small text-muted">12:00 PM | Aug 13</p>
-        </div>
-      </div>
-
-      <!-- Reciever Message-->
-      <div class="media w-50 ml-auto mb-3">
-        <div class="media-body">
-          <div class="bg-primary rounded py-2 px-3 mb-2">
-            <p class="text-small mb-0 text-white">Apollo University, Delhi, India Test</p>
-          </div>
-          <p class="small text-muted">12:00 PM | Aug 13</p>
-        </div>
-      </div>
-
     </div>
 
     <!-- Typing area -->
-<!--    <div class="type-box-container">
-        <div class="input-group">
-          <input type="text" placeholder="Type a message" aria-describedby="button-addon2"
-                 class="form-control border-0 py-4 bg-light">
-          <div class="input-group-append">
-            <button id="button-addon2" type="submit" class="btn btn-link"><i class="fa fa-paper-plane"></i></button>
-          </div>
-        </div>
-    </div>-->
+    <!--    <div class="type-box-container">
+            <div class="input-group">
+              <input type="text" placeholder="Type a message" aria-describedby="button-addon2"
+                     class="form-control border-0 py-4 bg-light">
+              <div class="input-group-append">
+                <button id="button-addon2" type="submit" class="btn btn-link"><i class="fa fa-paper-plane"></i></button>
+              </div>
+            </div>
+        </div>-->
     <div class="text-box-container">
-      <input type="text" class="text-input" placeholder="enter message..">
-      <button id="button-addon2" type="submit" class="btn btn-link"><i class="fa fa-paper-plane"></i></button>
+      <input v-model="msg" type="text" class="text-input" placeholder="enter message..">
+      <button @click="sendMsg" id="button-addon2" type="submit" class="btn btn-link"><i class="fa fa-paper-plane"></i>
+      </button>
     </div>
 
   </div>
 </template>
 
-<script>
-export default {
-  name: "Messages"
+<script setup>
+import {onMounted, onUnmounted, ref} from "vue";
+
+const props = defineProps({
+  senderID: Number,
+  receiverID: Number
+})
+
+const msg = ref('')
+const baseURL = 'http://localhost:3000'
+const {io} = require('socket.io-client')
+
+const token = localStorage.getItem("jwt");
+
+const socket = io.connect('http://localhost:3000', {
+  query: {token}
+});
+
+function sendMsg() {
+  socket.emit('private_message', {
+    content: msg.value,
+    to: props.receiverID
+  })
 }
+
+socket.on('private message', ({content, from, to}) => {
+  console.log(content)
+})
+onUnmounted(() => {
+  socket.disconnect()
+})
 </script>
 
 <style scoped>
@@ -127,7 +113,6 @@ export default {
 }
 
 
-
 .overall {
   margin-left: 7px;
   width: 100%;
@@ -149,13 +134,14 @@ export default {
   margin-right: 10px;
 }
 
-.text-box-container{
+.text-box-container {
   background-color: white;
   width: 100%;
   height: 6vh;
   padding: 4px;
 }
-.text-input{
+
+.text-input {
   border-radius: 50px;
   width: 96%;
   height: 90%;
@@ -163,18 +149,20 @@ export default {
   border: 0;
   padding: 13px;
 }
-.text-box-container button{
+
+.text-box-container button {
   margin-bottom: 2px;
 }
-.rounded-pill p{
-  padding:0 3px 0 3px;
+
+.rounded-pill p {
+  padding: 0 3px 0 3px;
 }
 
-.them-container .timestamp{
+.them-container .timestamp {
   margin-left: 10px;
 }
 
-.us-container .timestamp{
+.us-container .timestamp {
   float: right;
   margin-right: 5px;
 }
