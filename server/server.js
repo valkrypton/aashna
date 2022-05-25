@@ -5,12 +5,12 @@ const cors = require('cors')
 const database = require("../server/database")
 const multer = require("multer");
 const jwt = require("jsonwebtoken")
-const io = require('socket.io')(server,{
-    cors:{
-        origin:'*'
+const io = require('socket.io')(server, {
+    cors: {
+        origin: '*'
     },
-    pingTimeout:1000*60*3,
-    pingInterval:1000*60*5
+    pingTimeout: 1000 * 60 * 3,
+    pingInterval: 1000 * 60 * 5
 })
 
 const {
@@ -23,8 +23,8 @@ const {
 const getPeople = require("./api/getPeople");
 const {leftSwipe, rightSwipe} = require("./api/swiping");
 const {json} = require("express");
-const {getLogger} = require("nodemailer/lib/shared");
 const {retrieve_messages, log_message} = require("./api/messaging");
+const {checkPassword, changePassword, changeData} = require("./api/account");
 let db
 (async () => {
     db = await database()
@@ -32,34 +32,33 @@ let db
 
 const localStorage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, "../server/imgs/")
+        cb(null, "../server/imgs/avis")
     },
     filename: function (req, file, cb) {
         cb(null, req.body.email + ".jpeg")
     }
 })
 const upload = multer({storage: localStorage})
-const connectedUsers = new Map()
+new Map();
 app.use(express.static("imgs"))
 app.use(json())
 app.use(cors())
 
-io.use(function(socket, next){
-    if (socket.handshake.query && socket.handshake.query.token){
-        jwt.verify(socket.handshake.query.token, 'secret',{}, function(err, decoded) {
-            if (err){
+io.use(function (socket, next) {
+    if (socket.handshake.query && socket.handshake.query.token) {
+        jwt.verify(socket.handshake.query.token, 'secret', {}, function (err, decoded) {
+            if (err) {
                 console.log(err)
                 return next(new Error('Authentication error'))
             }
             socket.decoded = decoded;
             next();
         });
-    }
-    else {
+    } else {
         next(new Error('Authentication error'));
     }
 })
-    .on('connection', function(socket) {
+    .on('connection', function (socket) {
         console.log('user connected')
         // Connection now authenticated to receive further events
         socket.join(socket.decoded.user.user_id);
@@ -94,9 +93,9 @@ app.get("/verifycode", (req, res) => {
 app.post('/registerUser', upload.single("profile_img"),
     async (req, res) => {
         if (!(await checkIfUserExists(db, req.body.email))) {
-            req.file.path = req.body.email + ".jpeg"
+            req.file.path = 'http://localhost:3000/avis/' + req.body.email + ".jpeg"
             if (await registerUser(db, req, res)) {
-                const [rows,fields] = await db.execute("SELECT * FROM user WHERE email = ?",[req.body.email]);
+                const [rows, fields] = await db.execute("SELECT * FROM user WHERE email = ?", [req.body.email]);
                 const user = rows[0];
                 delete user.password;
                 jwt.sign({user: user}, 'secret', {expiresIn: '23h'},
@@ -245,18 +244,52 @@ app.get("/retrieve_messages", async (req, res) => {
     const authHeader = req.headers['authorization']
     const token = authHeader && authHeader.split(' ')[1]
     jwt.verify(token, 'secret', {}, async (err, decoded) => {
-      if(err){
-          res.send(401);
-      }
-      else{
-          let msgs;
-          if((msgs = await retrieve_messages(decoded.user.user_id, req.query.id, db))){
-              res.json(msgs);
-          }
-          else{
-              res.sendStatus(500);
-          }
-      }
+        if (err) {
+            res.send(401);
+        } else {
+            let msgs;
+            if ((msgs = await retrieve_messages(decoded.user.user_id, req.query.id, db))) {
+                res.json(msgs);
+            } else {
+                res.sendStatus(500);
+            }
+        }
     })
 })
 
+app.post('/changePassword', async (req, res) => {
+    if (await checkPassword(db, req)) {
+        try {
+            await changePassword(db, req)
+            res.sendStatus(200)
+        } catch (err) {
+            console.log(err)
+            res.sendStatus(500)
+        }
+    } else {
+        res.json({wrongPassword: false})
+    }
+})
+app.post('/changeUserData', upload.single('profile_img'),
+    async (req, res) => {
+        try {
+            req.body.img_url = 'http://localhost:3000/avis/' + req.body.email + ".jpeg"
+            await changeData(db, req)
+            const [rows] = await db.execute("SELECT * FROM user WHERE email = ?", [req.body.email]);
+            const user = rows[0];
+            delete user.password;
+            jwt.sign({user: user}, 'secret', {expiresIn: '23h'},
+                (err, token) => {
+                    if (err) {
+                        console.log(err)
+                        res.sendStatus(401)
+                    } else {
+                        res.json({token: token})
+                    }
+                }
+            )
+        } catch (err) {
+            console.log(err)
+            res.sendStatus(500)
+        }
+    })

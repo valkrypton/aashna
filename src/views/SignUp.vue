@@ -42,11 +42,14 @@
               <option class="option" value="2">Non-binary</option>
             </select>
           </div>
+          <div class="form-row">
+            <input id="dob" placeholder="Date of Birth" type="text" @focusin="date" @focusout="text" name="DOB" required>
+          </div>
           <div class="form-row" v-if="img_src">
             <img :src="img_src" alt="profile_img">
           </div>
           <div class="form-row">
-            <input type="file" accept="image/*" ref="file" name="profile_img" @change="showImg" required/>
+            <input type="file" accept="image/*" name="profile_img" @change="showImg" required/>
           </div>
           <div class="form-row" v-if="!codeSent">
             <input class="register" type="button" @click="getCode" value="Get OTP">
@@ -202,6 +205,16 @@ function verifyCode() {
     })
   }
 
+}
+
+function date(e) {
+  e.target.type = 'date'
+  e.target.placeholder = ''
+}
+
+function text(e) {
+  e.target.type = 'text'
+  e.target.placeholder = 'Date of Birth'
 }
 
 function resendCode() {
@@ -647,5 +660,8 @@ h5 {
   display: flex;
   width: 100%;
   margin: 3% 0 5%;
+}
+#dob{
+  cursor: pointer;
 }
 </style>

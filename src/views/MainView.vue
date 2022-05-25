@@ -1,37 +1,18 @@
 <template>
-  <!--  <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top">
-      <div class="container-fluid">
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li class="nav-item">
-            <img :src="img_url" alt="" width="50" height="50" class="mb-lg-0 mr-1">
-            <span class="navbar-link active">{{ user.fname }}</span>
-          </li>
-        </ul>
-        <a class="navbar-brand font-weight-bold" style="color: #0E3EDA;" href="#">Aashna</a>
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li class="nav-item">
-            <a class="nav-link active" @click="logout" style="cursor: pointer">Logout</a>
-          </li>
-        </ul>
-      </div>
-    </nav>-->
-
-  <NavBarHome :user_name="user.fname" :img_url="img_url" :logout="logout  "/>
+  <NavBarHome :user="user" :logout="logout  "/>
   <div class="main">
     <div class="row rounded-lg overflow-hidden shadow x">
       <!-- Users box-->
       <div class="col-0 px-0">
         <div class="bg-white">
-
           <div class="bg-gray px-4 py-2 bg-light">
             <p class="h5 mb-0 py-1">Recent</p>
           </div>
-
           <div class="messages-box">
             <div class="list-group rounded-0">
               <a v-for="user in matchedUsers" :key="user.user_id" @click="renderMsgs(user.user_id)"
                  class="list-group-item list-group-item-action active text-white rounded-0">
-                <div class="media"><img :src="baseURL+'/'+user.img_url" alt="user"
+                <div class="media"><img :src="user.img_url" alt="user"
                                         width="50" height="50" class="rounded-circle">
                   <div class="media-body ml-4">
                     <div class="d-flex align-items-center justify-content-between mb-1">
@@ -58,7 +39,7 @@
              data-mdb-perfect-scrollbar='true'>
           <div class="pic-info" style="position: absolute;">
             <img width="300" height="400" :src="user.img_url">
-            <h3 style="position: fixed; top: 260px">{{ user.fname }}, {{ user.age }}</h3>
+            <h3 style="position: fixed; top: 260px">{{ user.fname }}, {{ getAge(user.dob) }}</h3>
             <h3 style="position: fixed; top: 300px; font-size: 1.5rem">{{ user.school }}</h3>
             <h3 style="position: fixed; top: 330px; font-size: 1.5rem">{{ user.batch }}</h3>
             <div class="card-section">
@@ -88,16 +69,14 @@
 
 <script setup>
 import Hammer from "../hammerjs.js"
-import {onBeforeMount, onMounted, onUpdated, ref, watch} from "vue";
+import {onBeforeMount, onMounted, onUpdated, ref} from "vue";
 import axios from "axios";
 import {useRouter} from "vue-router";
 import NavBarHome from "@/components/NavBarHome";
 import Messages from "@/components/Messages";
 
 
-const baseURL = 'http://localhost:3000'
 const user = ref({user_id: "", fname: "", school: "", batch: "", bio: "", interests: [{interest: ""}], img_url: ""})
-const img_url = ref('')
 const users = ref([{user_id: "", fname: "", school: "", batch: "", bio: "", interests: [{interest: ""}], img_url: ""}])
 const router = useRouter()
 const renderMessages = ref(false)
@@ -106,6 +85,7 @@ const receiver = ref(0)
 
 function logout() {
   localStorage.removeItem('jwt')
+  localStorage.removeItem('loggedUser')
   router.push('/')
 }
 
@@ -173,8 +153,26 @@ function renderMsgs(userid) {
   renderMessages.value = true
 }
 
-onBeforeMount(() => {
+function getAge(date) {
+  const today = new Date();
+  const birthDate = new Date(date);
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const m = today.getMonth() - birthDate.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return age;
+}
 
+function getDate(date) {
+  let yourDate = new Date(date)
+  const offset = yourDate.getTimezoneOffset()
+  yourDate = new Date(yourDate.getTime() - (offset * 60 * 1000))
+  return yourDate.toISOString().split('T')[0]
+
+}
+
+onBeforeMount(() => {
   const token = localStorage.getItem("jwt")
   if (token != null) {
     axios.get("http://localhost:3000/currentUser", {
@@ -184,11 +182,13 @@ onBeforeMount(() => {
     }).then(response => {
       if (response.data) {
         user.value = response.data
-        img_url.value = "http://localhost:3000/" + user.value.img_url
+        user.value.dob = getDate(user.value.dob)
+        localStorage.setItem('loggedUser', JSON.stringify(user.value))
       } else
         console.log("no user returned")
+    }).catch(err => {
+      console.log(err)
     })
-
     axios.get("http://localhost:3000/getPeople", {
       headers: {
         Authorization: "Bearer " + token
@@ -196,10 +196,6 @@ onBeforeMount(() => {
     }).then(response => {
       if (response.data) {
         users.value = response.data
-
-        for (let i = 0; i < response.data.length; ++i) {
-          users.value[i].img_url = "http://localhost:3000/" + users.value[i].img_url
-        }
 
         function comp(interest) {
           return !!user.value.interests.find((u_interest) => {
@@ -214,8 +210,9 @@ onBeforeMount(() => {
           else
             return 1;
         })
-
       }
+    }).catch(err => {
+      console.log(err)
     })
     axios.get('http://localhost:3000/matchedUsers', {
       headers: {
@@ -228,6 +225,8 @@ onBeforeMount(() => {
     }).catch(err => {
       console.log(err.message)
     })
+  } else {
+    router.push('/')
   }
 
 })

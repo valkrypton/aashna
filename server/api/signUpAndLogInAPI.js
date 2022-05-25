@@ -48,10 +48,9 @@ const checkIfUserExists = async (db, email) => {
 
 const registerUser = async (db, req, res) => {
     try {
-        console.log(req.file.path)
         await db.execute('INSERT INTO user VALUES(null,?,?,?,?,?,?,?,?,?,?,?)',
             [req.body.email, await bcrypt.hash(req.body.password, 5), req.body.first_name, req.body.last_name,
-                req.body.bio, 20, req.body.school, req.body.batch, Number(req.body.gender),
+                req.body.bio, req.body.DOB, req.body.school, req.body.batch, Number(req.body.gender),
                 Number(req.body.genderpreference), req.file.path])
 
         //TODO : fix this
@@ -67,7 +66,6 @@ const registerUser = async (db, req, res) => {
 
 const verifyPassword = async (db, req, res) => {
     const [rows, fields] = await db.execute('SELECT * FROM user WHERE email = ?', [req.body.email])
-
     if (await bcrypt.compare(req.body.password, rows[0].password)) {
         const returnedUser = rows[0]
         delete returnedUser.password

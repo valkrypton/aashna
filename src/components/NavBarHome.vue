@@ -1,13 +1,13 @@
 <template>
   <nav class="navbar navbar-expand-lg bg-light sticky-top">
     <div class="container-fluid">
-      <router-link class="navbar-brand" to="/profile">
-        <img type="icon" :src="img_url" height="50" width="50" alt="logo" class="profile-img">
+      <router-link class="navbar-brand" :to="{name:'profile-page'}">
+        <img type="icon" :src="user.img_url" height="50" width="50" alt="logo" class="profile-img">
       </router-link>
       <div class="collapse navbar-collapse nav-div">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           <li class="nav-item">
-            <p class="nav-link">{{ user_name }}</p>
+            <p class="nav-link">{{ user.fname }}</p>
           </li>
           <li>
             <p class="nav-link brand-name">Aashna</p>
@@ -27,10 +27,10 @@
 
 <script setup>
 const props = defineProps({
-  img_url: String,
-  user_name: String,
+  user: Object,
   logout: Function
 })
+
 const baseURL = 'http://localhost:3000'
 </script>
 

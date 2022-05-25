@@ -3,7 +3,7 @@
 </template>
 
 <style>
-  #app {
+#app {
   font-family: "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -21,5 +21,21 @@ nav a {
 
 nav a.router-link-exact-active {
   color: #42b983;
+}
+
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+::-webkit-scrollbar-track {
+  width: 5px;
+  background: #f5f5f5;
+}
+
+::-webkit-scrollbar-thumb {
+  width: 1em;
+  background-color: #ddd;
+  outline: 1px solid slategrey;
+  border-radius: 1rem;
 }
 </style>

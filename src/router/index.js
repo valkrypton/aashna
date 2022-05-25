@@ -22,6 +22,13 @@ const routes = [
         path: "/home",
         name: "homepage",
         component: () => import('../views/MainView')
+    },
+    {
+        path: "/user-profile",
+        name: "profile-page",
+        component: () => import('../views/ProfileView'),
+        props: {user: Object}
+
     }
 
 ]
