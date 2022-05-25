@@ -24,7 +24,7 @@ const getPeople = require("./api/getPeople");
 const {leftSwipe, rightSwipe} = require("./api/swiping");
 const {json} = require("express");
 const {getLogger} = require("nodemailer/lib/shared");
-const {retrieve_messages, log_message} = require("./api/messaging");
+const {retrieve_messages, log_message, get_last_message} = require("./api/messaging");
 let db
 (async () => {
     db = await database()
@@ -260,3 +260,22 @@ app.get("/retrieve_messages", async (req, res) => {
     })
 })
 
+app.get("/get_last_message", async (req, res) => {
+    const authHeader = req.headers['authorization']
+    const token = authHeader && authHeader.split(' ')[1]
+    jwt.verify(token, 'secret', {}, async (err, decoded) => {
+        if(err){
+            res.send(401);
+        }
+        else{
+            let msg;
+            if((msg = (await get_last_message(decoded.user.user_id, req.query.id, db))[0])){
+                res.json(msg);
+            }
+            else{
+                console.log(decoded.user.user_id + " => " + req.query.id)
+                res.send("none")
+            }
+        }
+    })
+})
