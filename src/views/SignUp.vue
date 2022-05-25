@@ -43,7 +43,8 @@
             </select>
           </div>
           <div class="form-row">
-            <input id="dob" placeholder="Date of Birth" type="text" @focusin="date" @focusout="text" name="DOB" required>
+            <input id="dob" placeholder="Date of Birth" type="text" @focusin="date" @focusout="text" name="DOB"
+                   required>
           </div>
           <div class="form-row" v-if="img_src">
             <img :src="img_src" alt="profile_img">
@@ -104,18 +105,10 @@
             <textarea class="" placeholder="A short bio.." name="bio" required></textarea>
           </div>
           <div class="form-row">
-            <h5>Select up to 8 interests</h5>
-            <div class="interests">
-              <div v-for="interest in interests" :key="interest">
-                <input name="interests" type="checkbox" :value="interest.name" class="btn-check" :id="interest.name"
-                       autocomplete="off"
-                       v-model="interest.checked" @click="check">
-                <label class="btn btn-light interests-item" :for="interest.name">{{
-                    interest.name
-                  }}</label>
-              </div>
-            </div>
+            <input class="register" type="button" data-bs-toggle="modal" data-bs-target="#staticBackdrop"
+                   value="Click here to add your interests">
           </div>
+          <Interests @interest-closed="getInterests"/>
         </div>
       </form>
     </div>
@@ -130,7 +123,8 @@ import {watch} from 'vue';
 import axios from "axios";
 import {useRouter} from "vue-router";
 import {checkEmailValidity, checkPwValidity} from "@/composables/validEmailPassword";
-import {possibleInterests} from "@/composables/possibleInterests";
+
+import Interests from '../components/Interests'
 
 const baseURL = "http://localhost:3000"
 const router = useRouter();
@@ -141,7 +135,7 @@ let codeSent = ref(false);
 let invalidCode = ref(true);
 let codeEntered = ref(false);
 let userExists = ref(false)
-const interests = ref(possibleInterests)
+let interests = []
 const form = ref(null)
 const years = ref([]);
 const email = ref('')
@@ -182,6 +176,7 @@ function getCode() {
 function submitForm() {
   console.log("AAAAAAAAAAAAA")
   const fd = new FormData(form.value)
+  fd.append('interests', interests)
   axios.post(baseURL + '/registerUser', fd, {
     headers: {
       'content-type': 'multipart/form-data'
@@ -204,7 +199,10 @@ function verifyCode() {
       invalidCode.value = !response.data.validOTP;
     })
   }
+}
 
+function getInterests(data) {
+  interests = data
 }
 
 function date(e) {
@@ -226,20 +224,8 @@ function resendCode() {
 }
 
 
-((array) => {
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
-  }
-})(interests.value)
-
-
 for (let i = 0; i < 8; i++) {
   years.value.push(startYear + i);
-}
-
-function check(e) {
-  e.target.checked = interests.value.filter(i => i.checked).length < 8;
 }
 
 function showImg(e) {
@@ -475,6 +461,27 @@ img {
   color: white;
 }
 
+.form-v10-content .form-detail .form-right .register {
+  background: white;
+  border-radius: 25px;
+  box-shadow: 0 6px 17px 0 rgba(0, 0, 0, 0.15);
+  -o-box-shadow: 0 6px 17px 0 rgba(0, 0, 0, 0.15);
+  -moz-box-shadow: 0 6px 17px 0 rgba(0, 0, 0, 0.15);
+  -webkit-box-shadow: 0 6px 17px 0 rgba(0, 0, 0, 0.15);
+  width: fit-content;
+  border: none;
+  margin: 6px auto;
+  cursor: pointer;
+  color: black;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.form-v10-content .form-detail .form-right .register:hover {
+  background-color: var(--secondary-color);
+  color: white;
+}
+
 .form-v10-content .form-detail .form-right .form-row-last input {
   padding: 1.5rem;
 }
@@ -626,31 +633,6 @@ textarea:focus {
   border-color: var(--secondary-color);
 }
 
-.interests {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-}
-
-.interests-item {
-  margin: 5px 5px 5px 0;
-}
-
-.btn-check:checked + .btn-light {
-  background-color: var(--secondary-color);
-  border-color: transparent;
-}
-
-.btn-light {
-  background-color: var(--bg-color);
-  color: black;
-  border: transparent;
-}
-
-.btn-light:hover {
-  background-color: #ffd1e8;
-}
-
 h5 {
   color: #f2f2f2;
   font-weight: 400;
@@ -661,7 +643,8 @@ h5 {
   width: 100%;
   margin: 3% 0 5%;
 }
-#dob{
+
+#dob {
   cursor: pointer;
 }
 </style>

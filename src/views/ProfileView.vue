@@ -14,13 +14,15 @@
               password</a>
             <a class="list-group-item list-group-item-action" data-bs-toggle="list"
                href="#account-info">Info</a>
+            <a class="list-group-item list-group-item-action" data-bs-toggle="list"
+               href="#delete-account">Delete Account</a>
           </div>
         </div>
         <div class="col-md-9">
           <div class="tab-content">
             <div class="tab-pane fade active show" id="account-general">
               <div class="card-body d-flex align-items-center">
-                <img :src="img_src" alt="profile_img " class="d-block ui-w-80">
+                <img :src="img_src" alt="profile_img" class="d-block ui-w-80">
                 <div class="mx-3">
                   <label class="btn btn-outline-primary">
                     Upload new photo
@@ -133,6 +135,27 @@
                 </div>
               </div>
             </div>
+            <div class="tab-pane fade" id="delete-account">
+              <div class="card-body align-items-center pb-0">
+                <h5 style="color: var(--secondary-color)" class="h5">Enter your email and password to delete your
+                  account</h5>
+              </div>
+              <div class="card-body pb-2">
+                <div class="form-floating mb-3">
+                  <input type="text" class="form-control" id="delete-mail" placeholder="Delete Account">
+                  <label for="delete-mail">Email</label>
+                </div>
+                <div class="form-floating mb-3">
+                  <input type="text" class="form-control" id="delete-pass" placeholder="Delete Account">
+                  <label for="delete-pass">Password</label>
+                </div>
+                <div class="btn-group">
+                  <div @click="changePassword" class="btn btn-outline-danger">
+                    Delete your account
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -149,6 +172,7 @@ import {onBeforeMount, ref, watch} from "vue";
 import {useRoute, useRouter} from "vue-router";
 import axios from "axios";
 import {checkPwValidity} from "@/composables/validEmailPassword";
+import LandingPage from "@/views/LandingPage";
 
 const router = useRouter()
 const route = useRoute()
@@ -305,7 +329,6 @@ h2 {
   height: auto;
 }
 
-
 label.btn {
   margin-bottom: 0;
 }
@@ -343,13 +366,10 @@ label.btn {
   font-weight: bold !important;
 }
 
-html:not(.dark-style) .account-settings-links .list-group-item.active {
+html .account-settings-links .list-group-item.active {
   background: transparent !important;
 }
 
-.account-settings-multiselect ~ .select2-container {
-  width: 100% !important;
-}
 
 .light-style .account-settings-links .list-group-item {
   padding: 0.85rem 1.5rem;
@@ -360,32 +380,20 @@ html:not(.dark-style) .account-settings-links .list-group-item.active {
   color: #4e5155 !important;
 }
 
-.material-style .account-settings-links .list-group-item {
-  padding: 0.85rem 1.5rem;
-  border-color: rgba(24, 28, 33, 0.03) !important;
+label{
+  color: #0E3EDA;
 }
-
-.material-style .account-settings-links .list-group-item.active {
-  color: #4e5155 !important;
+label.btn-outline-primary{
+  color: black;
 }
-
-.dark-style .account-settings-links .list-group-item {
-  padding: 0.85rem 1.5rem;
-  border-color: rgba(255, 255, 255, 0.03) !important;
+div.btn-outline-primary{
+  color: black;
 }
-
-.dark-style .account-settings-links .list-group-item.active {
-  color: #fff !important;
+.btn-outline-primary{
+  border-color: var(--complementary-color);
+  background-color: var(--complementary-color);
 }
-
-.light-style .account-settings-links .list-group-item.active {
-  color: #4E5155 !important;
+.btn-outline-primary:hover{
+  background-color: var(--secondary-color);
 }
-
-.light-style .account-settings-links .list-group-item {
-  padding: 0.85rem 1.5rem;
-  border-color: rgba(24, 28, 33, 0.03) !important;
-}
-
-
 </style>
