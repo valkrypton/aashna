@@ -10,10 +10,10 @@
       <template v-for="msg in all_msgs">
         <div v-if="msg.sender === theirID" class="media them-container">
           <img :src="baseURL+'/'+them.img_url" alt="user" width="50" height="50" class="rounded-circle">
-            <div class="py-2 mb-2 them-msg">
-              <p class="text-small mb-0">{{ msg.content }}</p>
-              <span class="small text-muted timestamp">{{ (new Date(msg.timestamp)).toLocaleString() }}</span>
-            </div>
+          <div class="py-2 mb-2 them-msg">
+            <p class="text-small mb-0">{{ msg.content }}</p>
+            <span class="small text-muted timestamp">{{ (new Date(msg.timestamp)).toLocaleString() }}</span>
+          </div>
         </div>
 
         <!-- Reciever Message-->
@@ -26,17 +26,19 @@
       </template>
     </div>
 
-    <div class="text-box-container">
-      <input v-model="msg" type="text" class="text-input" placeholder="enter message.." >
-      <button @click="sendMsg" id="button-addon2" type="submit" class="btn btn-link"><i class="fa fa-paper-plane"></i>
-      </button>
-    </div>
+    <form @submit.prevent="() => {msg = ''}">
+      <div class="text-box-container">
+        <input v-model="msg" type="text" class="text-input" placeholder="enter message..">
+        <button @click="sendMsg" id="button-addon2" type="submit" class="btn btn-link"><i class="fa fa-paper-plane"></i>
+        </button>
+      </div>
+    </form>
 
   </div>
 </template>
 
 <script setup>
-import {onBeforeMount, onMounted, onUnmounted, onUpdated, ref} from "vue";
+import {onBeforeMount, onMounted, onUnmounted, onUpdated, ref, watch} from "vue";
 import axios from "axios";
 
 const ours = ref([]);
@@ -51,9 +53,12 @@ const props = defineProps({
   socket: Object
 })
 
+watch(props, ()=>{
+  getAllMsgs();
+})
 const msg = ref('')
+const emit = defineEmits(['mew-msg'])
 const baseURL = 'http://localhost:3000'
-
 
 function sendMsg() {
   props.socket.emit('private_message', {
@@ -61,10 +66,14 @@ function sendMsg() {
     to: props.theirID
   })
   all_msgs.value.push({sender: props.ourID, receiver: props.theirID, content: msg.value});
+  emit("new-msg", props.them, {from: props.us, to: props.them, content: msg.value, timestamp: new Date()})
+  setTimeout(() => {document.querySelector(".chat-box").scrollTop = document.querySelector(".chat-box").scrollHeight;}, 10)
 }
 
 props.socket.on('private message', ({content, from, to}) => {
   all_msgs.value.push({sender: from, receiver: to, content: content, timestamp: new Date()});
+  emit("new-msg", props.them, {from: props.them, to: props.us, content: msg.value, timestamp: new Date()})
+  setTimeout(() => {document.querySelector(".chat-box").scrollTop = document.querySelector(".chat-box").scrollHeight;}, 10)
 })
 
 function getAllMsgs() {
@@ -83,13 +92,6 @@ function getAllMsgs() {
 
 getAllMsgs();
 
-onUpdated(() => {
-  getAllMsgs();
-})
-
-onUnmounted(() => {
-  all_msgs.value = [];
-})
 
 </script>
 
@@ -174,11 +176,11 @@ onUnmounted(() => {
   margin-bottom: auto;
 }
 
-.them-container:hover .timestamp {
+.them-msg:hover .timestamp {
   visibility: visible;
 }
 
-.us-container:hover .timestamp {
+.us-msg:hover .timestamp {
   visibility: visible;
 }
 
@@ -203,4 +205,10 @@ onUnmounted(() => {
   margin-bottom: 2px;
 }
 
+.btn{
+  padding-top: 2px;
+}
+.fa-paper-plane{
+  font-size: large
+}
 </style>

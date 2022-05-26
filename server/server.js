@@ -20,16 +20,12 @@ const {
     registerUser,
     verifyPassword
 } = require('./api/signUpAndLogInAPI')
-const getPeople = require("./api/getPeople");
+const {getPeople, getMatchedUsers} = require("./api/getPeople");
 const {leftSwipe, rightSwipe} = require("./api/swiping");
 const {json} = require("express");
 const {getLogger} = require("nodemailer/lib/shared");
 const {retrieve_messages, log_message, get_last_message} = require("./api/messaging");
-let db
-(async () => {
-    db = await database()
-})()
-
+const {decode} = require("jsonwebtoken");
 const localStorage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, "../server/imgs/")
@@ -39,10 +35,14 @@ const localStorage = multer.diskStorage({
     }
 })
 const upload = multer({storage: localStorage})
-const connectedUsers = new Map()
 app.use(express.static("imgs"))
 app.use(json())
 app.use(cors())
+
+let db
+(async () => {
+    db = await database()
+})()
 
 io.use(function(socket, next){
     if (socket.handshake.query && socket.handshake.query.token){
@@ -60,19 +60,31 @@ io.use(function(socket, next){
     }
 })
     .on('connection', function(socket) {
-        console.log('user connected')
-        // Connection now authenticated to receive further events
         socket.join(socket.decoded.user.user_id);
 
-        socket.on("private_message", ({content, to}) => {
-            log_message(socket.decoded.user.user_id, to, content, db);
-            socket.to(to).to(socket.decoded.user.user_id).emit("private message", {
+        socket.on("private_message", async ({content, to}) => {
+            await log_message(socket.decoded.user.user_id, to, content, db);
+            socket.to(to).emit("private message", {
                 content,
                 from: socket.decoded.user.user_id,
                 to,
             })
         })
-    });
+
+        socket.on("rightSwipe", async ({swipee}) => {
+            try {
+                let [rows, fields] = await db.execute("SELECT * FROM user_swiped_right_on WHERE swiper = ? AND swipee = ?", [swipee, socket.decoded.user.user_id]);
+                if (rows.length !== 0) {
+                    swipee = Number(swipee);
+                    socket.to(swipee).emit("matched");
+                }
+            }catch (err){
+                console.log(err);
+            }
+        })
+
+
+    })
 
 server.listen(3000, function () {
     console.log("server running at port 3000");
@@ -171,6 +183,7 @@ app.get("/getPeople", async (req, res) => {
     })
 
 })
+
 app.get("/matchedUsers", async (req, res) => {
     const authHeader = req.headers['authorization']
     const token = authHeader && authHeader.split(' ')[1]
@@ -179,15 +192,7 @@ app.get("/matchedUsers", async (req, res) => {
             console.log("err at getting matched users")
             res.sendStatus(401)
         } else {
-            const [rows, fields] = await db.execute('select swipee from user_swiped_right_on where swiper = ?' +
-                ' and swipee in (select swiper from user_swiped_right_on where swipee = ?)',
-                [decoded.user.user_id, decoded.user.user_id])
-            const matchedUsers = []
-            for (let i = 0; i < rows.length; ++i) {
-                const [users] = await db.execute('select * from user where user_id = ?', [rows[i].swipee])
-                delete users[0].password
-                matchedUsers.push(users[0])
-            }
+            const matchedUsers = await getMatchedUsers(decoded.user.user_id, db);
             res.send(matchedUsers)
         }
     })
@@ -210,7 +215,6 @@ app.get("/currentUser", async (req, res) => {
 app.post("/leftSwipe", upload.none(), async (req, res) => {
     const authHeader = req.headers['authorization']
     const token = authHeader && authHeader.split(' ')[1]
-    console.log()
     jwt.verify(token, 'secret', {}, async (err, decoded) => {
         if (err) {
             console.log(err)
@@ -273,7 +277,6 @@ app.get("/get_last_message", async (req, res) => {
                 res.json(msg);
             }
             else{
-                console.log(decoded.user.user_id + " => " + req.query.id)
                 res.send("none")
             }
         }

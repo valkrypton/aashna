@@ -6,7 +6,7 @@
       <div class="col-0 px-0">
         <div class="bg-white">
           <div class="bg-gray px-4 py-2 bg-light">
-            <p class="h5 mb-0 py-1">Recent</p>
+            <p class="h5 mb-0 py-1">Matches</p>
           </div>
           <div class="messages-container">
             <div class="list-group rounded-0">
@@ -16,7 +16,7 @@
                 <div class="media usr-msg-container"><img :src="baseURL+'/'+user.img_url" alt="user" width="50"
                                                           height="50" class="rounded-circle">
                   <div class="media-body ml-4">
-                    <div class="d-flex align-items-center justify-content-between mb-1 nameDate">
+                    <div class="d-flex align-items-center justify-content-between nameDate">
                       <h6 class="mb-0">{{ user.fname }} {{ user.lname }}</h6>
                       <small class="small font-weight-bold"></small>
                     </div>
@@ -62,7 +62,12 @@
         <button id="love"><i class="fa fa-heart"></i></button>
       </div>
     </div>
-    <Messages :their-i-d="receiver.user_id" :our-i-d="Number(user.user_id)" :us="user" :them="receiver" :socket="socket"
+    <Messages :their-i-d="receiver.user_id"
+              :our-i-d="Number(user.user_id)"
+              :us="user"
+              :them="receiver"
+              :socket="socket"
+              @new-msg = "updateRecentMessages"
               v-else/>
   </div>
 
@@ -88,16 +93,33 @@ const matchedUsers = ref([])
 const receiver = ref({})
 
 
-const token = localStorage.getItem("jwt");
+let token = localStorage.getItem("jwt");
 const socket = io.connect('http://localhost:3000', {
   query: {token}
 });
+
+socket.on("matched", function (){
+  getMatchedUsers()
+})
 
 function logout() {
   localStorage.removeItem('jwt')
   router.push('/')
 }
 
+function getMatchedUsers(){
+  axios.get('http://localhost:3000/matchedUsers', {
+    headers: {
+      Authorization: 'Bearer ' + token
+    }
+  }).then(response => {
+    if (response.data) {
+      matchedUsers.value = response.data
+    }
+  }).catch(err => {
+    console.log(err.message)
+  })
+}
 
 function recordSwipes() {
   let lefts = document.querySelectorAll(".left");
@@ -126,7 +148,6 @@ function recordSwipes() {
 }
 
 function recordLeftSwipe(swipee) {
-  const token = localStorage.getItem("jwt");
   axios.post("http://localhost:3000/leftSwipe", {"swipee": swipee}, {
     headers: {
       Authorization: "Bearer " + token
@@ -137,23 +158,14 @@ function recordLeftSwipe(swipee) {
 }
 
 function recordRightSwipe(swipee) {
-  const token = localStorage.getItem("jwt");
   axios.post("http://localhost:3000/rightSwipe", {"swipee": swipee}, {
     headers: {
       Authorization: "Bearer " + token
     }
   }).then(response => {
-    axios.get('http://localhost:3000/matchedUsers', {
-      headers: {
-        Authorization: 'Bearer ' + token
-      }
-    }).then(response => {
-      if (response.data) {
-        matchedUsers.value = response.data
-      }
-    }).catch(err => {
-      console.log(err.message)
-    })
+    getMatchedUsers();
+    console.log("HERE")
+    socket.emit("rightSwipe",{swipee: swipee});
   })
 }
 
@@ -168,27 +180,27 @@ function renderMsgs(event, user) {
 
 function updateRecentMessages(them, msg){
   if(msg.content === ""){
-    const token = localStorage.getItem("jwt");
     axios.get("http://localhost:3000/get_last_message?id=" + them.user_id, {
       headers: {
         Authorization: "Bearer " + token
       }
     }).then(response => {
       if (response.data !== "none") {
-        console.log(response.data);
         let messageContent = String(response.data.content);
+
+        if(response.data.sender === user.value.user_id){
+          messageContent = ("You: " + messageContent);
+          document.querySelector("#" + them.fname + them.user_id +" p").classList.remove("bold")
+        }
+        else{
+          document.querySelector("#" + them.fname + them.user_id +" p").classList.add("bold")
+        }
 
         if(messageContent.length >= 30){
           messageContent = messageContent.slice(0, 30) + "..";
-
         }
 
         document.querySelector("#" + them.fname + them.user_id +" p").innerText = messageContent;
-
-        if(response.data.sender === them.user_id){
-          console.log("ADKLJFh")
-          document.querySelector("#" + them.fname + them.user_id +" p").classList.add("bold")
-        }
 
         let date = new Date(response.data.timestamp);
         if(date.getDate() === (new Date()).getDate()){
@@ -203,10 +215,62 @@ function updateRecentMessages(them, msg){
       else{
         document.querySelector("#" + them.fname + them.user_id +" p").innerText = "You matched with " + them.fname + "!";
       }
+      for(let i = 0; i < matchedUsers.value.length; ++i){
+        if(matchedUsers.value[i].user_id === them.user_id){
+          matchedUsers.value[i].mostRecentMessageTime = response.data.timestamp
+        }
+      }
+      sortMatchesList()
     })
+  }
+  else{
+    let messageContent = String(msg.content);
+
+    if(msg.from.user_id === user.value.user_id){
+      messageContent = "You: " + messageContent;
+      document.querySelector("#" + them.fname + them.user_id +" p").classList.remove("bold")
+    }
+
+    else{
+      document.querySelector("#" + them.fname + them.user_id +" p").classList.add("bold")
+    }
+
+    if(messageContent.length >= 30){
+      messageContent = messageContent.slice(0, 30) + "..";
+    }
+
+    document.querySelector("#" + them.fname + them.user_id +" p").innerText = messageContent;
+
+    let date = new Date(msg.timestamp);
+    if(date.getDate() === (new Date()).getDate()){
+      date = "Today";
+    }
+    else{
+      date = date.toLocaleDateString();
+    }
+    document.querySelector("#" + them.fname + them.user_id +" small").innerText = date;
+    for(let i = 0; i < matchedUsers.value.length; ++i){
+      if(matchedUsers.value[i].user_id === them.user_id){
+        matchedUsers.value[i].mostRecentMessageTime = msg.timestamp
+      }
+    }
+    sortMatchesList()
   }
 }
 
+function sortMatchesList(){
+  matchedUsers.value.sort((x, y) => {
+    if(!x.mostRecentMessageTime){
+      return 1;
+    }
+    if(!y.mostRecentMessageTime){
+      return -1
+    }
+    if(new Date(x.mostRecentMessageTime) < new Date(y.mostRecentMessageTime))
+      return 1;
+    return -1;
+  })
+}
 watch(matchedUsers, () => {
   matchedUsers.value.forEach((x) => {
     updateRecentMessages(x, {content: ""})
@@ -214,7 +278,6 @@ watch(matchedUsers, () => {
 })
 
 onBeforeMount(() => {
-  const token = localStorage.getItem("jwt")
   if (token != null) {
     axios.get("http://localhost:3000/currentUser", {
       headers: {
@@ -268,8 +331,8 @@ onBeforeMount(() => {
       console.log(err.message)
     })
   }
-
 })
+
 onMounted(() => {
   let fontScript = document.createElement('script')
   fontScript.setAttribute('src', 'https://kit.fontawesome.com/0654960685.js')
@@ -581,7 +644,6 @@ body {
 ::-webkit-scrollbar-thumb {
   width: 1em;
   background-color: #ddd;
-  outline: 1px solid slategrey;
   border-radius: 1rem;
 }
 
@@ -594,10 +656,6 @@ body {
   height: 83vh;
   width: 100%;
   overflow-y: scroll;
-}
-
-.rounded-lg {
-  border-radius: 0.5rem;
 }
 
 .list-group-item {
@@ -618,7 +676,7 @@ input::placeholder {
 }
 
 .usr-msg-container img {
-  margin-right: 8px;
+  margin-right: 12px;
 
 }
 
@@ -645,5 +703,9 @@ input::placeholder {
 
 .bold{
   font-weight: 500;
+}
+
+.media-body{
+  padding-top: 3px;
 }
 </style>
