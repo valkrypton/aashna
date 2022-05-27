@@ -100,8 +100,7 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button @click="close" type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button @click="close" type="button" class="btn btn-primary">Understood</button>
+          <button @click="close" type="button" class="btn btn-primary" data-bs-dismiss="modal">Add interests</button>
         </div>
       </div>
     </div>

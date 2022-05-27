@@ -35,7 +35,7 @@
               <hr class="border-light m-0">
               <div class="card-body">
                 <div class="form-floating mb-3">
-                  <input ref="email" type="email" class="form-control" id="floatingInput" placeholder="email"
+                  <input type="email" class="form-control" id="floatingInput" placeholder="email"
                          v-model="user.email" disabled>
                   <label for="floatingInput">Email address</label>
                 </div>
@@ -142,15 +142,23 @@
               </div>
               <div class="card-body pb-2">
                 <div class="form-floating mb-3">
-                  <input type="text" class="form-control" id="delete-mail" placeholder="Delete Account">
+                  <input type="text" v-model="email" class="form-control" id="delete-mail"
+                         placeholder="delete email">
                   <label for="delete-mail">Email</label>
                 </div>
+                <div v-if="wrongEmail" class="alert alert-danger">
+                  Wrong email!
+                </div>
                 <div class="form-floating mb-3">
-                  <input type="text" class="form-control" id="delete-pass" placeholder="Delete Account">
+                  <input type="password" v-model="pass" class="form-control" id="delete-pass"
+                         placeholder="Delete Account">
                   <label for="delete-pass">Password</label>
                 </div>
+                <div v-if="wrongPassword" class="alert alert-danger" role="alert">
+                  Wrong password!
+                </div>
                 <div class="btn-group">
-                  <div @click="changePassword" class="btn btn-outline-danger">
+                  <div @click="deleteAccount" class="btn btn-outline-danger">
                     Delete your account
                   </div>
                 </div>
@@ -195,8 +203,11 @@ const validPass = ref(false)
 const wrongPassword = ref(false)
 const passwordChanged = ref(false)
 const differentPass = ref(false)
+const wrongEmail = ref(false)
 const close = ref(null)
 const img_src = ref('')
+const email = ref('')
+const pass = ref('')
 let file = null
 let tempUser = {}
 
@@ -213,6 +224,12 @@ watch(oldPass, () => {
 })
 watch(cnfrmPass, () => {
   differentPass.value = false
+})
+watch(email, () => {
+  wrongEmail.value = false
+})
+watch(pass, () => {
+  wrongPassword.value = false
 })
 
 function showImg(e) {
@@ -299,6 +316,24 @@ function discard() {
   router.push({name: 'homepage'})
 }
 
+function deleteAccount() {
+  if (email.value === user.value.email) {
+    axios.post('http://localhost:3000/deleteAccount', {
+      pass: pass.value,
+      id: user.value.user_id
+    }).then(() => {
+      localStorage.removeItem('jwt')
+      localStorage.removeItem('loggedUser')
+      router.push('/')
+    }).catch(err => {
+      wrongPassword.value = true
+      console.log(err)
+    })
+  } else {
+    wrongEmail.value = true
+  }
+}
+
 onBeforeMount(() => {
   user.value = JSON.parse(localStorage.getItem('loggedUser'))
   img_src.value = user.value.img_url
@@ -380,20 +415,24 @@ html .account-settings-links .list-group-item.active {
   color: #4e5155 !important;
 }
 
-label{
+label {
   color: #0E3EDA;
 }
-label.btn-outline-primary{
+
+label.btn-outline-primary {
   color: black;
 }
-div.btn-outline-primary{
+
+div.btn-outline-primary {
   color: black;
 }
-.btn-outline-primary{
+
+.btn-outline-primary {
   border-color: var(--complementary-color);
   background-color: var(--complementary-color);
 }
-.btn-outline-primary:hover{
+
+.btn-outline-primary:hover {
   background-color: var(--secondary-color);
 }
 </style>

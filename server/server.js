@@ -23,15 +23,13 @@ const {
 const {getPeople, getMatchedUsers} = require("./api/getPeople");
 const {leftSwipe, rightSwipe} = require("./api/swiping");
 const {json} = require("express");
-const {checkPassword, changePassword, changeData} = require("./api/account");
+const {checkPassword, changePassword, changeData, deleteUser} = require("./api/account");
 let db
 (async () => {
     db = await database()
 })()
 
-const {getLogger} = require("nodemailer/lib/shared");
 const {retrieve_messages, log_message, get_last_message} = require("./api/messaging");
-const {decode} = require("jsonwebtoken");
 const localStorage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, "../server/imgs/avis")
@@ -45,29 +43,26 @@ app.use(express.static("imgs"))
 app.use(json())
 app.use(cors())
 
-io.use(function(socket, next){
-    if (socket.handshake.query && socket.handshake.query.token){
-        jwt.verify(socket.handshake.query.token, 'secret',{}, function(err, decoded) {
-            if (err){
+io.use(function (socket, next) {
+    if (socket.handshake.query && socket.handshake.query.token) {
+        jwt.verify(socket.handshake.query.token, 'secret', {}, function (err, decoded) {
+            if (err) {
                 console.log(err)
                 return next(new Error('Authentication error'))
             }
             socket.decoded = decoded;
             next();
         });
-    }
-    else {
+    } else {
         next(new Error('Authentication error'));
     }
 })
-    .on('connection', function(socket) {
-        console.log('user connected')
-        // Connection now authenticated to receive further events
+    .on('connection', function (socket) {
         socket.join(socket.decoded.user.user_id);
 
         socket.on("private_message", async ({content, to}) => {
             await log_message(socket.decoded.user.user_id, to, content, db);
-            socket.to(to).emit("private message", {
+            socket.to(to).emit("private_message", {
                 content,
                 from: socket.decoded.user.user_id,
                 to,
@@ -81,11 +76,10 @@ io.use(function(socket, next){
                     swipee = Number(swipee);
                     socket.to(swipee).emit("matched");
                 }
-            }catch (err){
+            } catch (err) {
                 console.log(err);
             }
         })
-
 
     })
 
@@ -253,23 +247,37 @@ app.get("/retrieve_messages", async (req, res) => {
     const authHeader = req.headers['authorization']
     const token = authHeader && authHeader.split(' ')[1]
     jwt.verify(token, 'secret', {}, async (err, decoded) => {
-      if(err){
-          res.send(401);
-      }
-      else{
-          let msgs;
-          if((msgs = await retrieve_messages(decoded.user.user_id, req.query.id, db))){
-              res.json(msgs);
-          }
-          else{
-              res.sendStatus(500);
-          }
-      }
+        if (err) {
+            res.send(401);
+        } else {
+            let msgs;
+            if ((msgs = await retrieve_messages(decoded.user.user_id, req.query.id, db))) {
+                res.json(msgs);
+            } else {
+                res.sendStatus(500);
+            }
+        }
+    })
+})
+app.get("/get_last_message", async (req, res) => {
+    const authHeader = req.headers['authorization']
+    const token = authHeader && authHeader.split(' ')[1]
+    jwt.verify(token, 'secret', {}, async (err, decoded) => {
+        if (err) {
+            res.send(401);
+        } else {
+            let msg;
+            if ((msg = (await get_last_message(decoded.user.user_id, req.query.id, db))[0])) {
+                res.json(msg);
+            } else {
+                res.send("none")
+            }
+        }
     })
 })
 
 app.post('/changePassword', async (req, res) => {
-    if (await checkPassword(db, req)) {
+    if (await checkPassword(db, req.body.oldPass, req.body.id)) {
         try {
             await changePassword(db, req)
             res.sendStatus(200)
@@ -304,21 +312,16 @@ app.post('/changeUserData', upload.single('profile_img'),
             res.sendStatus(500)
         }
     })
-app.get("/get_last_message", async (req, res) => {
-    const authHeader = req.headers['authorization']
-    const token = authHeader && authHeader.split(' ')[1]
-    jwt.verify(token, 'secret', {}, async (err, decoded) => {
-        if(err){
-            res.send(401);
+app.post('/deleteAccount', async (req, res) => {
+    if (await checkPassword(db, req.body.pass, req.body.id)) {
+        try {
+            await deleteUser(db, req.body.id)
+            res.sendStatus(200)
+        } catch (err) {
+            console.log(err)
+            res.sendStatus(500)
         }
-        else{
-            let msg;
-            if((msg = (await get_last_message(decoded.user.user_id, req.query.id, db))[0])){
-                res.json(msg);
-            }
-            else{
-                res.send("none")
-            }
-        }
-    })
+    } else {
+        res.sendStatus(401)
+    }
 })

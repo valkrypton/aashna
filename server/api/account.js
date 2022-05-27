@@ -1,9 +1,10 @@
 const bcrypt = require("bcrypt");
 
-const checkPassword = async (db, req) => {
+const checkPassword = async (db, pass, id) => {
     try {
-        const [rows, fields] = await db.execute('SELECT password FROM user WHERE user_id = ?', [req.body.user_id])
-        return await bcrypt.compare(req.body.oldPass, rows[0].password)
+        console.log(id)
+        const [rows, fields] = await db.execute('SELECT password FROM user WHERE user_id = ?', [id])
+        return await bcrypt.compare(pass, rows[0].password)
     } catch (err) {
         console.log(err)
         return false
@@ -30,4 +31,11 @@ const changeData = async (db, req) => {
         throw err
     }
 }
-module.exports = {checkPassword, changePassword, changeData}
+const deleteUser = async (db, id) => {
+    try {
+        db.execute('DELETE FROM user WHERE user_id = ?', [id])
+    } catch (err) {
+        throw err
+    }
+}
+module.exports = {checkPassword, changePassword, changeData, deleteUser}

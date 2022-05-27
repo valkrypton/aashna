@@ -26,9 +26,7 @@ const routes = [
     {
         path: "/user-profile",
         name: "profile-page",
-        component: () => import('../views/ProfileView'),
-        props: {user: Object}
-
+        component: () => import('../views/ProfileView')
     }
 
 ]

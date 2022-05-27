@@ -1,16 +1,18 @@
 <template>
-  <nav class="navbar navbar-expand-lg bg-light sticky-top">
+  <nav class="navbar navbar-expand bg-light sticky-top">
     <div class="container-fluid">
-      <router-link class="navbar-brand" :to="{name:'profile-page'}">
+      <router-link :to="{name:'profile-page'}">
         <img type="icon" :src="user.img_url" height="50" width="50" alt="logo" class="profile-img">
       </router-link>
-      <div class="collapse navbar-collapse nav-div">
+      <div class="navbar-collapse nav-div">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li class="nav-item">
-            <p class="nav-link">{{ user.fname }}</p>
-          </li>
+          <router-link :to="{name:'profile-page'}">
+            <li class="nav-item">
+              <p class="nav-link">{{ user.fname }}</p>
+            </li>
+          </router-link>
           <li>
-            <p class="nav-link brand-name">Aashna</p>
+            <p class="nav-link brand-name" @click="hideMsgs">Aashna</p>
           </li>
         </ul>
         <div>
@@ -28,7 +30,8 @@
 <script setup>
 const props = defineProps({
   user: Object,
-  logout: Function
+  logout: Function,
+  hideMsgs: Function
 })
 
 const baseURL = 'http://localhost:3000'
@@ -36,10 +39,16 @@ const baseURL = 'http://localhost:3000'
 
 <style scoped>
 .brand-name {
+  font-size: 2rem;
   position: absolute;
   left: 50%;
+  bottom: 5%;
   transform: translate(-50%);
   color: var(--main-color);
+}
+
+.brand-name:hover {
+  color: var(--secondary-color);
 }
 
 div a {
@@ -73,5 +82,11 @@ div a.router-link-active {
 
 .profile-img {
   border-radius: 100%;
+}
+
+.navbar-expand {
+  height: 4.25rem;
+  padding-left: 0;
+  padding-right: 0;
 }
 </style>

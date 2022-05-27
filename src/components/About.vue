@@ -18,16 +18,18 @@ export default {
 </script>
 
 <style scoped>
-*{
-  font-family: "Segoe UI",sans-serif;
+* {
+  font-family: "Segoe UI", sans-serif;
 }
-.outer{
+
+.outer {
   display: flex;
   flex-direction: row;
   padding: 3% 20%;
   background-color: white;
 }
-span{
+
+span {
   font-size: 1.5em;
 }
 </style>

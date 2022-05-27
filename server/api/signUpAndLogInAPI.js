@@ -54,8 +54,10 @@ const registerUser = async (db, req, res) => {
                 Number(req.body.genderpreference), req.file.path])
 
         const [rows, fields] = await db.execute('SELECT user_id FROM user where email=? ', [req.body.email])
-        for (let i = 0; i < req.body.interests.length; ++i)
+        for (let i = 0; i < req.body.interests.length/2; ++i) {
             await db.execute('INSERT INTO user_interests values(?,?)', [Number(rows[0].user_id), req.body.interests[i]])
+            console.log(i)
+        }
         return true;
     } catch (err) {
         console.log(err)

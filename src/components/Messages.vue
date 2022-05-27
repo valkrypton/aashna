@@ -9,7 +9,7 @@
       <!-- Sender Message-->
       <template v-for="msg in all_msgs">
         <div v-if="msg.sender === theirID" class="media them-container">
-          <img :src="baseURL+'/'+them.img_url" alt="user" width="50" height="50" class="rounded-circle">
+          <img :src="them.img_url" alt="user" width="50" height="50" class="rounded-circle">
           <div class="py-2 mb-2 them-msg">
             <p class="text-small mb-0">{{ msg.content }}</p>
             <span class="small text-muted timestamp">{{ (new Date(msg.timestamp)).toLocaleString() }}</span>
@@ -52,8 +52,8 @@ const props = defineProps({
   them: Object,
   socket: Object
 })
-
-watch(props, ()=>{
+console.log(props.them.img_url)
+watch(props, () => {
   getAllMsgs();
 })
 const msg = ref('')
@@ -67,13 +67,17 @@ function sendMsg() {
   })
   all_msgs.value.push({sender: props.ourID, receiver: props.theirID, content: msg.value});
   emit("new-msg", props.them, {from: props.us, to: props.them, content: msg.value, timestamp: new Date()})
-  setTimeout(() => {document.querySelector(".chat-box").scrollTop = document.querySelector(".chat-box").scrollHeight;}, 10)
+  setTimeout(() => {
+    document.querySelector(".chat-box").scrollTop = document.querySelector(".chat-box").scrollHeight;
+  }, 10)
 }
 
-props.socket.on('private message', ({content, from, to}) => {
+props.socket.on('private_message', ({content, from, to}) => {
   all_msgs.value.push({sender: from, receiver: to, content: content, timestamp: new Date()});
   emit("new-msg", props.them, {from: props.them, to: props.us, content: msg.value, timestamp: new Date()})
-  setTimeout(() => {document.querySelector(".chat-box").scrollTop = document.querySelector(".chat-box").scrollHeight;}, 10)
+  setTimeout(() => {
+    document.querySelector(".chat-box").scrollTop = document.querySelector(".chat-box").scrollHeight;
+  }, 10)
 })
 
 function getAllMsgs() {
@@ -205,10 +209,11 @@ getAllMsgs();
   margin-bottom: 2px;
 }
 
-.btn{
+.btn {
   padding-top: 2px;
 }
-.fa-paper-plane{
+
+.fa-paper-plane {
   font-size: large
 }
 </style>

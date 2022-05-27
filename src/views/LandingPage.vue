@@ -24,14 +24,14 @@ import router from "@/router";
 const baseURL = "http://localhost:3000"
 onBeforeMount(() => {
   if (localStorage.getItem('jwt') != null) {
-    axios.get(baseURL+"/sessionCheck",{
-      headers:{
-        Authorization:'Bearer '+ localStorage.getItem('jwt')
+    axios.get(baseURL + "/sessionCheck", {
+      headers: {
+        Authorization: 'Bearer ' + localStorage.getItem('jwt')
       }
-    }).then(response=>{
+    }).then(response => {
       if (response.data.sessionExists)
         router.push("/home")
-    }).catch(err=>{
+    }).catch(err => {
       console.log(err.message)
     })
   }

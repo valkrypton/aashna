@@ -46,32 +46,17 @@
             <input id="dob" placeholder="Date of Birth" type="text" @focusin="date" @focusout="text" name="DOB"
                    required>
           </div>
-          <div class="form-row" v-if="img_src">
-            <img :src="img_src" alt="profile_img">
-          </div>
           <div class="form-row">
-            <input type="file" accept="image/*" name="profile_img" @change="showImg" required/>
-          </div>
-          <div class="form-row" v-if="!codeSent">
-            <input class="register" type="button" @click="getCode" value="Get OTP">
-          </div>
-          <div v-else class="form-row">
-            <h5 style="color: black">One Time Code</h5>
-            <input id="inputCode" v-model="code" required autocomplete="off">
-            <input class="register" @click="verifyCode()" type="button" value="Verify OTP"
-                   style="margin-right: 5px">
-            <input class="register" @click="resendCode()" type="button" value="Resend OTP"
-                   style="margin-left: 5px">
-            <div v-if="codeEntered && invalidCode" class="alert alert-danger" role="alert">
-              Entered code is wrong
-            </div>
-          </div>
-          <div class="form-row" v-if="!invalidCode">
-            <input type="submit" class="register" value="Register">
+            <input id="avi" type="file" accept="image/*" name="profile_img" @change="showImg" required/>
           </div>
         </div>
         <div class="form-right">
-          <h2>Details</h2>
+          <div class="header">
+            <h2>Details</h2>
+            <div>
+              <img :src="img_src" alt="profile_img" class="profile-img">
+            </div>
+          </div>
           <div class="form-row">
             <select name="school" required>
               <option value="" disabled selected>School</option>
@@ -106,7 +91,26 @@
           </div>
           <div class="form-row">
             <input class="register" type="button" data-bs-toggle="modal" data-bs-target="#staticBackdrop"
-                   value="Click here to add your interests">
+                   value="Add your interests">
+          </div>
+          <Transition name="otp-btn">
+            <div class="form-row" v-if="!codeSent">
+              <input class="register" type="button" @click="getCode" value="Get OTP">
+            </div>
+          </Transition>
+          <div v-if="codeSent" class="form-row">
+            <h5 style="color: black">One Time Code</h5>
+            <input id="inputCode" v-model="code" required autocomplete="off">
+            <input class="register" @click="verifyCode()" type="button" value="Verify OTP"
+                   style="margin-right: 5px">
+            <input class="register" @click="resendCode()" type="button" value="Resend OTP"
+                   style="margin-left: 5px">
+            <div v-if="codeEntered && invalidCode" class="alert alert-danger" role="alert">
+              Entered code is wrong
+            </div>
+          </div>
+          <div class="form-row" v-if="!invalidCode">
+            <input type="submit" class="register" value="Register">
           </div>
           <Interests @interest-closed="getInterests"/>
         </div>
@@ -140,7 +144,7 @@ const form = ref(null)
 const years = ref([]);
 const email = ref('')
 const pass = ref('')
-const img_src = ref(null)
+const img_src = ref('https://dreamvilla.life/wp-content/uploads/2017/07/dummy-profile-pic.png')
 let startYear = new Date().getFullYear() - 7;
 
 
@@ -174,9 +178,8 @@ function getCode() {
 }
 
 function submitForm() {
-  console.log("AAAAAAAAAAAAA")
   const fd = new FormData(form.value)
-  fd.append('interests', interests)
+  fd.append('interest', interests)
   axios.post(baseURL + '/registerUser', fd, {
     headers: {
       'content-type': 'multipart/form-data'
@@ -202,6 +205,7 @@ function verifyCode() {
 }
 
 function getInterests(data) {
+  interests = []
   interests = data
 }
 
@@ -246,7 +250,7 @@ body {
 
 #welcome-msg {
   text-align: center;
-  margin: 5% 0 0 0;
+  margin: 1% 0 0 0;
 }
 
 #welcome-msg h3 {
@@ -265,10 +269,6 @@ body {
 
 }
 
-img {
-  width: 50%;
-  height: fit-content;
-}
 
 .form-v10-content {
   background: #fff;
@@ -282,7 +282,6 @@ img {
   -webkit-box-shadow: 0 8px 20px 0 rgba(0, 0, 0, 0.15);
   margin: 95px 0;
   position: relative;
-  font-family: 'Montserrat', sans-serif;
 }
 
 .form-v10-content .form-detail {
@@ -363,7 +362,6 @@ img {
   -moz-appearance: unset;
   -webkit-appearance: unset;
   outline: none;
-  font-family: 'Montserrat', sans-serif;
   font-size: 16px;
   box-sizing: border-box;
   -moz-box-sizing: border-box;
@@ -438,24 +436,6 @@ img {
   font-weight: 400;
 }
 
-.form-v10-content .form-detail .form-left .register {
-  background: white;
-  border-radius: 25px;
-  -moz-border-radius: 25px;
-  -webkit-border-radius: 25px;
-  box-shadow: 0 6px 17px 0 rgba(0, 0, 0, 0.15);
-  -o-box-shadow: 0 6px 17px 0 rgba(0, 0, 0, 0.15);
-  -moz-box-shadow: 0 6px 17px 0 rgba(0, 0, 0, 0.15);
-  -webkit-box-shadow: 0 6px 17px 0 rgba(0, 0, 0, 0.15);
-  width: 180px;
-  border: none;
-  margin: 6px auto;
-  cursor: pointer;
-  color: black;
-  font-weight: 700;
-  font-size: 15px;
-}
-
 .form-v10-content .form-detail .form-left .register:hover {
   background-color: var(--secondary-color);
   color: white;
@@ -468,7 +448,7 @@ img {
   -o-box-shadow: 0 6px 17px 0 rgba(0, 0, 0, 0.15);
   -moz-box-shadow: 0 6px 17px 0 rgba(0, 0, 0, 0.15);
   -webkit-box-shadow: 0 6px 17px 0 rgba(0, 0, 0, 0.15);
-  width: fit-content;
+  width: max-content;
   border: none;
   margin: 6px auto;
   cursor: pointer;
@@ -524,6 +504,23 @@ img {
 .form-v10-content .form-detail .form-right input:-moz-placeholder { /* Firefox 18- */
   color: #f2f2f2;
   font-size: 16px;
+}
+
+.form-right .header {
+  display: grid;
+  grid-template-columns: 50% 50%;
+  place-items: center stretch;
+}
+
+
+.profile-img {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+}
+
+.form-right .header div {
+  padding-left: 9rem;
 }
 
 /* Responsive */
@@ -600,7 +597,6 @@ textarea {
   -moz-appearance: unset;
   -webkit-appearance: unset;
   outline: none;
-  font-family: 'Montserrat', sans-serif;
   font-size: 16px;
   box-sizing: border-box;
   -moz-box-sizing: border-box;

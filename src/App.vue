@@ -4,7 +4,7 @@
 
 <style>
 #app {
-  font-family: "Segoe UI", sans-serif;
+  font-family: "Ubuntu", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color: #2c3e50;

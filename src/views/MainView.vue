@@ -1,20 +1,19 @@
 <template>
-  <NavBarHome :user="user" :logout="logout  "/>
+  <NavBarHome :user="user" :logout="logout" :hide-msgs="hideMsgs"/>
   <div class="main">
     <div class="row rounded-lg overflow-hidden shadow x">
       <!-- Users box-->
       <div class="col-0 px-0">
         <div class="bg-white">
-
           <div class="bg-gray px-4 py-2 bg-light">
-            <p class="h5 mb-0 py-1">Recent</p>
+            <p class="h5 mb-0 py-1">Matches</p>
           </div>
           <div class="messages-container">
             <div class="list-group rounded-0">
               <a v-for="user in matchedUsers" :key="user.user_id" @click="renderMsgs($event, user)"
                  :id="user.fname.concat(user.user_id)"
                  class="list-group-item list-group-item-action text-white rounded-0">
-                <div class="media usr-msg-container"><img :src="baseURL+'/'+user.img_url" alt="user" width="50"
+                <div class="media usr-msg-container"><img :src="user.img_url" alt="user" width="50"
                                                           height="50" class="rounded-circle">
                   <div class="media-body ml-4">
                     <div class="d-flex align-items-center justify-content-between nameDate">
@@ -68,7 +67,7 @@
               :us="user"
               :them="receiver"
               :socket="socket"
-              @new-msg = "updateRecentMessages"
+              @new-msg="updateRecentMessages"
               v-else/>
   </div>
 
@@ -76,12 +75,11 @@
 
 <script setup>
 import Hammer from "../hammerjs.js"
-import {onBeforeMount, onMounted, onUpdated, ref} from "vue";
+import {onBeforeMount, onMounted, onUpdated, ref, watch} from "vue";
 import axios from "axios";
 import {useRouter} from "vue-router";
 import NavBarHome from "@/components/NavBarHome";
 import Messages from "@/components/Messages";
-
 
 const {io} = require('socket.io-client')
 const baseURL = 'http://localhost:3000'
@@ -98,7 +96,7 @@ const socket = io.connect('http://localhost:3000', {
   query: {token}
 });
 
-socket.on("matched", function (){
+socket.on("matched", function () {
   getMatchedUsers()
 })
 
@@ -108,7 +106,7 @@ function logout() {
   router.push('/')
 }
 
-function getMatchedUsers(){
+function getMatchedUsers() {
   axios.get('http://localhost:3000/matchedUsers', {
     headers: {
       Authorization: 'Bearer ' + token
@@ -166,7 +164,7 @@ function recordRightSwipe(swipee) {
   }).then(response => {
     getMatchedUsers();
     console.log("HERE")
-    socket.emit("rightSwipe",{swipee: swipee});
+    socket.emit("rightSwipe", {swipee: swipee});
   })
 }
 
@@ -179,8 +177,12 @@ function renderMsgs(event, user) {
   document.querySelector("#" + user.fname + user.user_id).classList.add("active")
 }
 
-function updateRecentMessages(them, msg){
-  if(msg.content === ""){
+function hideMsgs() {
+  renderMessages.value = false
+}
+
+function updateRecentMessages(them, msg) {
+  if (msg.content === "") {
     axios.get("http://localhost:3000/get_last_message?id=" + them.user_id, {
       headers: {
         Authorization: "Bearer " + token
@@ -189,69 +191,62 @@ function updateRecentMessages(them, msg){
       if (response.data !== "none") {
         let messageContent = String(response.data.content);
 
-        if(response.data.sender === user.value.user_id){
+        if (response.data.sender === user.value.user_id) {
           messageContent = ("You: " + messageContent);
-          document.querySelector("#" + them.fname + them.user_id +" p").classList.remove("bold")
-        }
-        else{
-          document.querySelector("#" + them.fname + them.user_id +" p").classList.add("bold")
+          document.querySelector("#" + them.fname + them.user_id + " p").classList.remove("bold")
+        } else {
+          document.querySelector("#" + them.fname + them.user_id + " p").classList.add("bold")
         }
 
-        if(messageContent.length >= 30){
+        if (messageContent.length >= 30) {
           messageContent = messageContent.slice(0, 30) + "..";
         }
 
-        document.querySelector("#" + them.fname + them.user_id +" p").innerText = messageContent;
+        document.querySelector("#" + them.fname + them.user_id + " p").innerText = messageContent;
 
         let date = new Date(response.data.timestamp);
-        if(date.getDate() === (new Date()).getDate()){
+        if (date.getDate() === (new Date()).getDate()) {
           date = "Today";
-        }
-        else{
+        } else {
           date = date.toLocaleDateString();
         }
-        document.querySelector("#" + them.fname + them.user_id +" small").innerText = date;
+        document.querySelector("#" + them.fname + them.user_id + " small").innerText = date;
 
+      } else {
+        document.querySelector("#" + them.fname + them.user_id + " p").innerText = "You matched with " + them.fname + "!";
       }
-      else{
-        document.querySelector("#" + them.fname + them.user_id +" p").innerText = "You matched with " + them.fname + "!";
-      }
-      for(let i = 0; i < matchedUsers.value.length; ++i){
-        if(matchedUsers.value[i].user_id === them.user_id){
+      for (let i = 0; i < matchedUsers.value.length; ++i) {
+        if (matchedUsers.value[i].user_id === them.user_id) {
           matchedUsers.value[i].mostRecentMessageTime = response.data.timestamp
         }
       }
       sortMatchesList()
     })
-  }
-  else{
+  } else {
     let messageContent = String(msg.content);
 
-    if(msg.from.user_id === user.value.user_id){
+    if (msg.from.user_id === user.value.user_id) {
       messageContent = "You: " + messageContent;
-      document.querySelector("#" + them.fname + them.user_id +" p").classList.remove("bold")
+      document.querySelector("#" + them.fname + them.user_id + " p").classList.remove("bold")
+    } else {
+      document.querySelector("#" + them.fname + them.user_id + " p").classList.add("bold")
     }
 
-    else{
-      document.querySelector("#" + them.fname + them.user_id +" p").classList.add("bold")
-    }
-
-    if(messageContent.length >= 30){
+    if (messageContent.length >= 30) {
       messageContent = messageContent.slice(0, 30) + "..";
     }
 
-    document.querySelector("#" + them.fname + them.user_id +" p").innerText = messageContent;
+    document.querySelector("#" + them.fname + them.user_id + " p").innerText = messageContent;
 
     let date = new Date(msg.timestamp);
-    if(date.getDate() === (new Date()).getDate()){
+    if (date.getDate() === (new Date()).getDate()) {
       date = "Today";
-    }
-    else{
+    } else {
       date = date.toLocaleDateString();
     }
-    document.querySelector("#" + them.fname + them.user_id +" small").innerText = date;
-    for(let i = 0; i < matchedUsers.value.length; ++i){
-      if(matchedUsers.value[i].user_id === them.user_id){
+    document.querySelector("#" + them.fname + them.user_id + " small").innerText = date;
+    for (let i = 0; i < matchedUsers.value.length; ++i) {
+      if (matchedUsers.value[i].user_id === them.user_id) {
         matchedUsers.value[i].mostRecentMessageTime = msg.timestamp
       }
     }
@@ -259,19 +254,20 @@ function updateRecentMessages(them, msg){
   }
 }
 
-function sortMatchesList(){
+function sortMatchesList() {
   matchedUsers.value.sort((x, y) => {
-    if(!x.mostRecentMessageTime){
+    if (!x.mostRecentMessageTime) {
       return 1;
     }
-    if(!y.mostRecentMessageTime){
+    if (!y.mostRecentMessageTime) {
       return -1
     }
-    if(new Date(x.mostRecentMessageTime) < new Date(y.mostRecentMessageTime))
+    if (new Date(x.mostRecentMessageTime) < new Date(y.mostRecentMessageTime))
       return 1;
     return -1;
   })
 }
+
 watch(matchedUsers, () => {
   matchedUsers.value.forEach((x) => {
     updateRecentMessages(x, {content: ""})
@@ -711,22 +707,23 @@ input::placeholder {
   font-size: 1.1rem;
 }
 
-.nameDate{
+.nameDate {
   display: flex;
 }
-.small{
+
+.small {
   float: right;
 }
 
-.usr-msg-container div{
+.usr-msg-container div {
   width: 100%;
 }
 
-.bold{
+.bold {
   font-weight: 500;
 }
 
-.media-body{
+.media-body {
   padding-top: 3px;
 }
 </style>

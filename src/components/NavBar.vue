@@ -1,10 +1,10 @@
 <template>
-  <nav class="navbar navbar-expand-lg bg-light sticky-top">
+  <nav class="navbar navbar-expand bg-light sticky-top">
     <div class="container-fluid">
-      <router-link class="navbar-brand" to="/">
+      <router-link to="/">
         <img src="../assets/logo.png" height="50" width="50" alt="logo">
       </router-link>
-      <div class="collapse navbar-collapse">
+      <div class="navbar-collapse">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           <li class="mx-2 nav-item">
             <router-link class="nav-link" to="/">Home</router-link>
@@ -58,5 +58,11 @@ div a:hover {
 div a.router-link-active {
   text-decoration: none;
   color: var(--main-color);
+}
+
+.navbar-expand {
+  height: 4.25rem;
+  padding-left: 0;
+  padding-right: 0;
 }
 </style>
