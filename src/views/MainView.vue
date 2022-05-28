@@ -163,7 +163,6 @@ function recordRightSwipe(swipee) {
     }
   }).then(response => {
     getMatchedUsers();
-    console.log("HERE")
     socket.emit("rightSwipe", {swipee: swipee});
   })
 }

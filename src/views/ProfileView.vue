@@ -1,6 +1,6 @@
 <template>
   <div class="container light-style flex-grow-1 ">
-    <h2 class="py-5 mb-3">
+    <h2 class="pt-3">
       Account settings
     </h2>
     <div class="card overflow-hidden">
@@ -133,6 +133,11 @@
                   </select>
                   <label for="batch">Batch</label>
                 </div>
+                <div class="btn-group">
+                  <div class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
+                    Change interests
+                  </div>
+                </div>
               </div>
             </div>
             <div class="tab-pane fade" id="delete-account">
@@ -173,6 +178,7 @@
       <button @click="cancel" type="button" class="btn btn-secondary">Cancel</button>
     </div>
   </div>
+  <Interests @interest-closed="getInterests"/>
 </template>
 
 <script setup>
@@ -180,7 +186,7 @@ import {onBeforeMount, ref, watch} from "vue";
 import {useRoute, useRouter} from "vue-router";
 import axios from "axios";
 import {checkPwValidity} from "@/composables/validEmailPassword";
-import LandingPage from "@/views/LandingPage";
+import Interests from "@/components/Interests";
 
 const router = useRouter()
 const route = useRoute()
@@ -196,6 +202,7 @@ const user = ref({
   interests: [{interest: ""}],
   img_url: ""
 })
+
 const oldPass = ref('')
 const newPass = ref('')
 const cnfrmPass = ref('')
@@ -210,7 +217,7 @@ const email = ref('')
 const pass = ref('')
 let file = null
 let tempUser = {}
-
+let interests = []
 for (let i = 0; i < 8; i++) {
   years.value.push(startYear + i);
 }
@@ -334,6 +341,12 @@ function deleteAccount() {
   }
 }
 
+function getInterests(data) {
+  interests = []
+  interests = data
+  console.log(interests)
+}
+
 onBeforeMount(() => {
   user.value = JSON.parse(localStorage.getItem('loggedUser'))
   img_src.value = user.value.img_url
@@ -355,9 +368,6 @@ h2 {
   height: 50px;
 }
 
-.container {
-  background-color: var(--bg-color);
-}
 
 .ui-w-80 {
   width: 80px !important;

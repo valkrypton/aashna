@@ -42,8 +42,8 @@
                   }}</label>
               </div>
             </div>
-            <h3>Music</h3>
             <div class="row mb-3">
+              <h3>Music</h3>
               <div v-for="interest in music" class="col-md-auto">
                 <input name="interests" type="checkbox" :value="interest.name" class="btn-check" :id="interest.name"
                        autocomplete="off"
@@ -121,7 +121,8 @@ import {
 } from "@/composables/possibleInterests";
 
 const userInterests = new Set()
-const emits = defineEmits(['interest closed'])
+const emits = defineEmits(['interest-closed'])
+
 
 function check(e) {
   if (!userInterests.has(e.target.value)) {

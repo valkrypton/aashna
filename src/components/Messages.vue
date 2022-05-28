@@ -52,7 +52,6 @@ const props = defineProps({
   them: Object,
   socket: Object
 })
-console.log(props.them.img_url)
 watch(props, () => {
   getAllMsgs();
 })

@@ -46,17 +46,15 @@
             <input id="dob" placeholder="Date of Birth" type="text" @focusin="date" @focusout="text" name="DOB"
                    required>
           </div>
+          <div v-if="img_src" class="form-row img-div">
+            <img :src="img_src" alt="profile_img" class="profile-img">
+          </div>
           <div class="form-row">
             <input id="avi" type="file" accept="image/*" name="profile_img" @change="showImg" required/>
           </div>
         </div>
         <div class="form-right">
-          <div class="header">
-            <h2>Details</h2>
-            <div>
-              <img :src="img_src" alt="profile_img" class="profile-img">
-            </div>
-          </div>
+          <h2>Details</h2>
           <div class="form-row">
             <select name="school" required>
               <option value="" disabled selected>School</option>
@@ -144,7 +142,7 @@ const form = ref(null)
 const years = ref([]);
 const email = ref('')
 const pass = ref('')
-const img_src = ref('https://dreamvilla.life/wp-content/uploads/2017/07/dummy-profile-pic.png')
+const img_src = ref(null)
 let startYear = new Date().getFullYear() - 7;
 
 
@@ -506,22 +504,12 @@ body {
   font-size: 16px;
 }
 
-.form-right .header {
-  display: grid;
-  grid-template-columns: 50% 50%;
-  place-items: center stretch;
-}
-
-
 .profile-img {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
+  width: 50%;
+  height: fit-content;
 }
 
-.form-right .header div {
-  padding-left: 9rem;
-}
+
 
 /* Responsive */
 @media screen and (max-width: 1199px) {
