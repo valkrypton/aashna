@@ -277,7 +277,7 @@ app.get("/get_last_message", async (req, res) => {
 })
 
 app.post('/changePassword', async (req, res) => {
-    if (await checkPassword(db, req.body.oldPass, req.body.id)) {
+    if (await checkPassword(db, req.body.oldPass, req.body.user_id)) {
         try {
             await changePassword(db, req)
             res.sendStatus(200)
@@ -286,7 +286,7 @@ app.post('/changePassword', async (req, res) => {
             res.sendStatus(500)
         }
     } else {
-        res.json({wrongPassword: false})
+        res.json({wrongPassword: true})
     }
 })
 app.post('/changeUserData', upload.single('profile_img'),

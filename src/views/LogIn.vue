@@ -123,7 +123,6 @@ body {
   -webkit-box-shadow: 0 8px 20px 0 rgba(0, 0, 0, 0.15);
   margin: 95px 0;
   position: relative;
-  font-family: 'Montserrat', sans-serif;
 }
 
 .form-v10-content .form-detail {
@@ -159,7 +158,6 @@ body {
   -moz-appearance: unset;
   -webkit-appearance: unset;
   outline: none;
-  font-family: 'Montserrat', sans-serif;
   font-size: 16px;
   box-sizing: border-box;
   -moz-box-sizing: border-box;

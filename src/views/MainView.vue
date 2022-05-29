@@ -82,7 +82,6 @@ import NavBarHome from "@/components/NavBarHome";
 import Messages from "@/components/Messages";
 
 const {io} = require('socket.io-client')
-const baseURL = 'http://localhost:3000'
 const user = ref({user_id: "", fname: "", school: "", batch: "", bio: "", interests: [{interest: ""}], img_url: ""})
 const users = ref([{user_id: "", fname: "", school: "", batch: "", bio: "", interests: [{interest: ""}], img_url: ""}])
 const router = useRouter()
@@ -103,6 +102,7 @@ socket.on("matched", function () {
 function logout() {
   localStorage.removeItem('jwt')
   localStorage.removeItem('loggedUser')
+  socket.disconnect()
   router.push('/')
 }
 
@@ -349,16 +349,9 @@ onBeforeMount(() => {
   }
 })
 
-onMounted(() => {
-  let fontScript = document.createElement('script')
-  fontScript.setAttribute('src', 'https://kit.fontawesome.com/0654960685.js')
-  fontScript.setAttribute('crossorigin', 'anonymous')
-  document.head.appendChild(fontScript)
-})
 
 onUpdated(() => {
   if (!renderMessages.value) {
-
     let tinderContainer = document.querySelector('.tinder');
     let allCards = document.querySelectorAll('.tinder--card');
 

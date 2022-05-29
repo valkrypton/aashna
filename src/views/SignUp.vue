@@ -97,7 +97,7 @@
             </div>
           </Transition>
           <div v-if="codeSent" class="form-row">
-            <h5 style="color: black">One Time Code</h5>
+            <h5>One Time Code</h5>
             <input id="inputCode" v-model="code" required autocomplete="off">
             <input class="register" @click="verifyCode()" type="button" value="Verify OTP"
                    style="margin-right: 5px">
@@ -508,7 +508,6 @@ body {
   width: 50%;
   height: fit-content;
 }
-
 
 
 /* Responsive */

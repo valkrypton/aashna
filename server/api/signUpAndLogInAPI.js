@@ -52,10 +52,10 @@ const registerUser = async (db, req, res) => {
             [req.body.email, await bcrypt.hash(req.body.password, 5), req.body.first_name, req.body.last_name,
                 req.body.bio, req.body.DOB, req.body.school, req.body.batch, Number(req.body.gender),
                 Number(req.body.genderpreference), req.file.path])
-
         const [rows, fields] = await db.execute('SELECT user_id FROM user where email=? ', [req.body.email])
-        for (let i = 0; i < req.body.interests.length/2; ++i) {
-            await db.execute('INSERT INTO user_interests values(?,?)', [Number(rows[0].user_id), req.body.interests[i]])
+        req.body.interest = req.body.interest.split(",")
+        for (let i = 0; i < req.body.interest.length; ++i) {
+            await db.execute('INSERT INTO user_interests values(?,?)', [Number(rows[0].user_id), req.body.interest[i]])
             console.log(i)
         }
         return true;

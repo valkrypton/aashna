@@ -28,7 +28,6 @@
                     Upload new photo
                     <input @change="showImg" ref="file" accept="image/*" type="file" class="account-settings-fileinput">
                   </label> &nbsp;
-                  <button type="button" class="btn btn-default md-btn-flat">Reset</button>
                   <div class="text-light small mt-1">Allowed JPG, GIF or PNG.</div>
                 </div>
               </div>
@@ -178,11 +177,11 @@
       <button @click="cancel" type="button" class="btn btn-secondary">Cancel</button>
     </div>
   </div>
-  <Interests @interest-closed="getInterests"/>
+  <Interests @interest-closed="getInterests" :interests="tempUser.interests"/>
 </template>
 
 <script setup>
-import {onBeforeMount, ref, watch} from "vue";
+import {ref, watch} from "vue";
 import {useRoute, useRouter} from "vue-router";
 import axios from "axios";
 import {checkPwValidity} from "@/composables/validEmailPassword";
@@ -239,6 +238,10 @@ watch(pass, () => {
   wrongPassword.value = false
 })
 
+user.value = JSON.parse(localStorage.getItem('loggedUser'))
+img_src.value = user.value.img_url
+tempUser = JSON.parse(JSON.stringify(user.value))
+
 function showImg(e) {
   file = e.target.files[0]
   user.value.img_url = ''
@@ -251,6 +254,7 @@ function showImg(e) {
 
 function saveChanges() {
   if (JSON.stringify(user.value) !== JSON.stringify(tempUser)) {
+    console.log('hi')
     const fd = new FormData()
     fd.set('id', user.value.user_id)
     fd.set('email', user.value.email)
@@ -263,6 +267,7 @@ function saveChanges() {
     fd.set('gender', user.value.gender)
     fd.set('gender_preference', user.value.gender_preference)
     fd.set('img_url', user.value.img_url)
+    fd.append('interest', interests)
     if (file !== null) {
       fd.set('profile_img', file)
     }
@@ -291,7 +296,7 @@ function changePassword() {
       oldPass: oldPass.value,
       newPass: newPass.value,
     }).then(response => {
-      if (response.data.wrongPassword === false) {
+      if (response.data.wrongPassword === true) {
         wrongPassword.value = true
       } else {
         passwordChanged.value = true
@@ -341,17 +346,15 @@ function deleteAccount() {
   }
 }
 
-function getInterests(data) {
-  interests = []
-  interests = data
-  console.log(interests)
+function getInterests(data, changed) {
+  if (changed) {
+    interests = []
+    interests = data
+    user.value.interests = interests
+  }
 }
 
-onBeforeMount(() => {
-  user.value = JSON.parse(localStorage.getItem('loggedUser'))
-  img_src.value = user.value.img_url
-  tempUser = JSON.parse(JSON.stringify(user.value))
-})
+
 </script>
 
 <style scoped>

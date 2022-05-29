@@ -21,12 +21,16 @@ const changePassword = async (db, req) => {
 }
 const changeData = async (db, req) => {
     try {
-        console.log(req.body)
         await db.execute('UPDATE user SET fname = ?, lname = ?, bio = ?, dob = ?, school = ?, batch = ?, gender = ?,' +
             'gender_preference = ?, img_url = ? WHERE user_id = ?',
             [req.body.fname, req.body.lname, req.body.bio, req.body.dob, req.body.school,
                 req.body.batch, req.body.gender, req.body.gender_preference,
                 req.body.img_url, req.body.id])
+        await db.execute('DELETE FROM user_interests WHERE user_id = ?', [req.body.id])
+        req.body.interest = req.body.interest.split(",")
+        for (let i = 0; i < req.body.interest.length; ++i) {
+            await db.execute('INSERT INTO user_interests VALUE(?,?)', [req.body.id, req.body.interest[i]])
+        }
     } catch (err) {
         throw err
     }

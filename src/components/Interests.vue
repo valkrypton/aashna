@@ -12,7 +12,7 @@
             <div class="row mb-3">
               <h3>Sports</h3>
               <div v-for="interest in sports" class="col-md-auto">
-                <input name="interests" type="checkbox" :value="interest.name" class="btn-check" :id="interest.name"
+                <input type="checkbox" :value="interest.name" class="btn-check" :id="interest.name"
                        autocomplete="off"
                        v-model="interest.checked" @click="check">
                 <label class="btn btn-light interests-item" :for="interest.name">{{
@@ -23,7 +23,7 @@
             <div class="row mb-3">
               <h3>Cinema</h3>
               <div v-for="interest in movies" class="col-md-auto">
-                <input name="interests" type="checkbox" :value="interest.name" class="btn-check" :id="interest.name"
+                <input type="checkbox" :value="interest.name" class="btn-check" :id="interest.name"
                        autocomplete="off"
                        v-model="interest.checked" @click="check">
                 <label class="btn btn-light interests-item" :for="interest.name">{{
@@ -34,7 +34,7 @@
             <div class="row mb-3">
               <h3>Television</h3>
               <div v-for="interest in television" class="col-md-auto">
-                <input name="interests" type="checkbox" :value="interest.name" class="btn-check" :id="interest.name"
+                <input type="checkbox" :value="interest.name" class="btn-check" :id="interest.name"
                        autocomplete="off"
                        v-model="interest.checked" @click="check">
                 <label class="btn btn-light interests-item" :for="interest.name">{{
@@ -45,7 +45,7 @@
             <div class="row mb-3">
               <h3>Music</h3>
               <div v-for="interest in music" class="col-md-auto">
-                <input name="interests" type="checkbox" :value="interest.name" class="btn-check" :id="interest.name"
+                <input type="checkbox" :value="interest.name" class="btn-check" :id="interest.name"
                        autocomplete="off"
                        v-model="interest.checked" @click="check">
                 <label class="btn btn-light interests-item" :for="interest.name">{{
@@ -56,7 +56,7 @@
             <div class="row mb-3">
               <h3>Reading</h3>
               <div v-for="interest in reading" class="col-md-auto">
-                <input name="interests" type="checkbox" :value="interest.name" class="btn-check" :id="interest.name"
+                <input type="checkbox" :value="interest.name" class="btn-check" :id="interest.name"
                        autocomplete="off"
                        v-model="interest.checked" @click="check">
                 <label class="btn btn-light interests-item" :for="interest.name">{{
@@ -67,7 +67,7 @@
             <div class="row mb-3">
               <h3>Writing</h3>
               <div v-for="interest in writing" class="col-md-auto">
-                <input name="interests" type="checkbox" :value="interest.name" class="btn-check" :id="interest.name"
+                <input type="checkbox" :value="interest.name" class="btn-check" :id="interest.name"
                        autocomplete="off"
                        v-model="interest.checked" @click="check">
                 <label class="btn btn-light interests-item" :for="interest.name">{{
@@ -78,7 +78,7 @@
             <div class="row mb-3">
               <h3>Going Out</h3>
               <div v-for="interest in going_out" class="col-md-auto">
-                <input name="interests" type="checkbox" :value="interest.name" class="btn-check" :id="interest.name"
+                <input type="checkbox" :value="interest.name" class="btn-check" :id="interest.name"
                        autocomplete="off"
                        v-model="interest.checked" @click="check">
                 <label class="btn btn-light interests-item" :for="interest.name">{{
@@ -89,7 +89,7 @@
             <div class="row mb-3">
               <h3>Staying in</h3>
               <div v-for="interest in staying_in" class="col-md-auto">
-                <input name="interests" type="checkbox" :value="interest.name" class="btn-check" :id="interest.name"
+                <input type="checkbox" :value="interest.name" class="btn-check" :id="interest.name"
                        autocomplete="off"
                        v-model="interest.checked" @click="check">
                 <label class="btn btn-light interests-item" :for="interest.name">{{
@@ -122,8 +122,10 @@ import {
 
 const userInterests = new Set()
 const emits = defineEmits(['interest-closed'])
-
-
+const props = defineProps({
+  interests: Array
+})
+let changed = false
 function check(e) {
   if (!userInterests.has(e.target.value)) {
     if (userInterests.size + 1 <= 8) {
@@ -136,11 +138,76 @@ function check(e) {
     userInterests.delete(e.target.value)
     e.target.checked = false
   }
+  changed = true
 }
 
 function close() {
-  emits('interest-closed', Array.from(userInterests))
+    emits('interest-closed', Array.from(userInterests),changed)
 }
+
+console.log(props.interests)
+if (props.interests) {
+  props.interests.forEach(x => {
+    userInterests.add(x.interest)
+  })
+  props.interests.forEach(x => {
+    movies.forEach(x1 => {
+      if (x.interest === x1.name) {
+        x1.checked = true
+      }
+    })
+  });
+  props.interests.forEach(x => {
+    going_out.forEach(x1 => {
+      if (x.interest === x1.name) {
+        x1.checked = true
+      }
+    })
+  });
+  props.interests.forEach(x => {
+    staying_in.forEach(x1 => {
+      if (x.interest === x1.name) {
+        x1.checked = true
+      }
+    })
+  });
+  props.interests.forEach(x => {
+    music.forEach(x1 => {
+      if (x.interest === x1.name) {
+        x1.checked = true
+      }
+    })
+  });
+  props.interests.forEach(x => {
+    television.forEach(x1 => {
+      if (x.interest === x1.name) {
+        x1.checked = true
+      }
+    })
+  });
+  props.interests.forEach(x => {
+    sports.forEach(x1 => {
+      if (x.interest === x1.name) {
+        x1.checked = true
+      }
+    })
+  });
+  props.interests.forEach(x => {
+    writing.forEach(x1 => {
+      if (x.interest === x1.name) {
+        x1.checked = true
+      }
+    })
+  });
+  props.interests.forEach(x => {
+    reading.forEach(x1 => {
+      if (x.interest === x1.name) {
+        x1.checked = true
+      }
+    })
+  });
+}
+
 </script>
 
 <style scoped>
