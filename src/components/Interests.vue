@@ -119,6 +119,7 @@ import {
   television,
   writing
 } from "@/composables/possibleInterests";
+import {onBeforeUnmount, onMounted} from "vue";
 
 const userInterests = new Set()
 const emits = defineEmits(['interest-closed'])
@@ -126,6 +127,7 @@ const props = defineProps({
   interests: Array
 })
 let changed = false
+
 function check(e) {
   if (!userInterests.has(e.target.value)) {
     if (userInterests.size + 1 <= 8) {
@@ -142,10 +144,10 @@ function check(e) {
 }
 
 function close() {
-    emits('interest-closed', Array.from(userInterests),changed)
+  emits('interest-closed', Array.from(userInterests), changed)
 }
 
-console.log(props.interests)
+
 if (props.interests) {
   props.interests.forEach(x => {
     userInterests.add(x.interest)
@@ -207,7 +209,6 @@ if (props.interests) {
     })
   });
 }
-
 </script>
 
 <style scoped>

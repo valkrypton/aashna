@@ -181,7 +181,7 @@
 </template>
 
 <script setup>
-import {ref, watch} from "vue";
+import {onMounted, ref, watch} from "vue";
 import {useRoute, useRouter} from "vue-router";
 import axios from "axios";
 import {checkPwValidity} from "@/composables/validEmailPassword";
@@ -254,7 +254,6 @@ function showImg(e) {
 
 function saveChanges() {
   if (JSON.stringify(user.value) !== JSON.stringify(tempUser)) {
-    console.log('hi')
     const fd = new FormData()
     fd.set('id', user.value.user_id)
     fd.set('email', user.value.email)
@@ -354,7 +353,9 @@ function getInterests(data, changed) {
   }
 }
 
-
+onMounted(() => {
+  document.getElementById('account-info').classList.remove('active')
+})
 </script>
 
 <style scoped>
@@ -412,6 +413,7 @@ label.btn {
 
 .account-settings-links .list-group-item.active {
   font-weight: bold !important;
+  color: #4e5155 !important;
 }
 
 html .account-settings-links .list-group-item.active {
@@ -424,9 +426,6 @@ html .account-settings-links .list-group-item.active {
   border-color: rgba(24, 28, 33, 0.03) !important;
 }
 
-.light-style .account-settings-links .list-group-item.active {
-  color: #4e5155 !important;
-}
 
 label {
   color: #0E3EDA;

@@ -14,7 +14,7 @@ const getPeople = async (user, db) => {
     return rows
 }
 
-async function getMatchedUsers(user_id, db) {
+const getMatchedUsers = async (user_id, db) => {
     const [rows, fields] = await db.execute('select swipee from user_swiped_right_on where swiper = ?' +
         ' and swipee in (select swiper from user_swiped_right_on where swipee = ?)',
         [user_id, user_id])
@@ -23,6 +23,11 @@ async function getMatchedUsers(user_id, db) {
         const [users] = await db.execute('select * from user where user_id = ?', [rows[i].swipee])
         delete users[0].password
         matchedUsers.push(users[0])
+    }
+    for (let i = 0; i < matchedUsers.length; ++i) {
+        const [rows] = await db.execute("SELECT interest FROM user_interests WHERE user_id = ?",
+            [matchedUsers[i].user_id])
+        matchedUsers[i].interests = rows
     }
     return matchedUsers;
 }

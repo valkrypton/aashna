@@ -1,5 +1,5 @@
 <template>
-  <nav class="navbar navbar-expand bg-light sticky-top">
+  <nav class="navbar navbar-expand bg-light ">
     <div class="container-fluid">
       <router-link :to="{name:'profile-page'}">
         <img type="icon" :src="user.img_url" height="50" width="50" alt="logo" class="profile-img">

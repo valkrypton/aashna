@@ -1,3 +1,4 @@
+<!--suppress EqualityComparisonWithCoercionJS, EqualityComparisonWithCoercionJS -->
 <template>
   <NavBarHome :user="user" :logout="logout" :hide-msgs="hideMsgs"/>
   <div class="main">
@@ -10,12 +11,13 @@
           </div>
           <div class="messages-container">
             <div class="list-group rounded-0">
-              <a v-for="user in matchedUsers" :key="user.user_id" @click="renderMsgs($event, user)"
-                 :id="user.fname.concat(user.user_id)"
+              <a v-for="user in matchedUsers" :key="user.user_id"
+                 :id="user.fname.trim().concat(user.user_id)"
                  class="list-group-item list-group-item-action text-white rounded-0">
-                <div class="media usr-msg-container"><img :src="user.img_url" alt="user" width="50"
-                                                          height="50" class="rounded-circle">
-                  <div class="media-body ml-4">
+                <div class="media usr-msg-container">
+                  <img :src="user.img_url" alt="user" width="50"
+                       height="50" class="rounded-circle" @click="openProfile(user)">
+                  <div class="media-body ml-4" @click="renderMsgs($event, user)">
                     <div class="d-flex align-items-center justify-content-between nameDate">
                       <h6 class="mb-0">{{ user.fname }} {{ user.lname }}</h6>
                       <small class="small font-weight-bold"></small>
@@ -38,7 +40,7 @@
         <div v-for="user in users" :key="user.user_id" :id="user.user_id" class="tinder--card"
              data-mdb-perfect-scrollbar='true'>
           <div class="pic-info" style="position: absolute;">
-            <img width="300" height="400" :src="user.img_url">
+            <img width="300" height="400" :src="user.img_url" alt="img">
             <h3 style="position: fixed; top: 260px">{{ user.fname }}, {{ getAge(user.dob) }}</h3>
             <h3 style="position: fixed; top: 300px; font-size: 1.5rem">{{ user.school }}</h3>
             <h3 style="position: fixed; top: 330px; font-size: 1.5rem">{{ user.batch }}</h3>
@@ -70,16 +72,23 @@
               @new-msg="updateRecentMessages"
               v-else/>
   </div>
-
+  <Teleport to="body">
+    <Transition name="modal">
+      <ProfileCard v-if="modalOpen" :user="modalUser" @modal-closed="modalOpen=false"/>
+    </Transition>
+  </Teleport>
 </template>
 
 <script setup>
 import Hammer from "../hammerjs.js"
-import {onBeforeMount, onMounted, onUpdated, ref, watch} from "vue";
+import {onBeforeMount, onUpdated, ref, watch} from "vue";
 import axios from "axios";
 import {useRouter} from "vue-router";
 import NavBarHome from "@/components/NavBarHome";
 import Messages from "@/components/Messages";
+import ProfileCard from "@/components/ProfileCard";
+import {getDate, getAge} from "@/composables/date";
+
 
 const {io} = require('socket.io-client')
 const user = ref({user_id: "", fname: "", school: "", batch: "", bio: "", interests: [{interest: ""}], img_url: ""})
@@ -88,8 +97,8 @@ const router = useRouter()
 const renderMessages = ref(false)
 const matchedUsers = ref([])
 const receiver = ref({})
-
-
+const modalOpen = ref(false)
+const modalUser = ref({})
 let token = localStorage.getItem("jwt");
 const socket = io.connect('http://localhost:3000', {
   query: {token}
@@ -151,8 +160,8 @@ function recordLeftSwipe(swipee) {
     headers: {
       Authorization: "Bearer " + token
     }
-  }).then(response => {
-
+  }).catch(err => {
+    console.log(err.message)
   })
 }
 
@@ -161,22 +170,27 @@ function recordRightSwipe(swipee) {
     headers: {
       Authorization: "Bearer " + token
     }
-  }).then(response => {
+  }).then(() => {
     getMatchedUsers();
     socket.emit("rightSwipe", {swipee: swipee});
+  }).catch(err => {
+    console.log(err.message)
   })
 }
 
 function renderMsgs(event, user) {
   document.querySelectorAll(".active").forEach((x) => {
     x.classList.remove("active")
-  });
+  })
   receiver.value = user;
   renderMessages.value = true;
-  document.querySelector("#" + user.fname + user.user_id).classList.add("active")
+  document.querySelector("#" + user.fname.trim() + user.user_id).classList.add("active")
 }
 
 function hideMsgs() {
+  document.querySelectorAll(".active").forEach((x) => {
+    x.classList.remove("active")
+  });
   renderMessages.value = false
 }
 
@@ -192,9 +206,9 @@ function updateRecentMessages(them, msg) {
 
         if (response.data.sender === user.value.user_id) {
           messageContent = ("You: " + messageContent);
-          document.querySelector("#" + them.fname + them.user_id + " p").classList.remove("bold")
+          document.querySelector("#" + them.fname.trim() + them.user_id + " p").classList.remove("bold")
         } else {
-          document.querySelector("#" + them.fname + them.user_id + " p").classList.add("bold")
+          document.querySelector("#" + them.fname.trim() + them.user_id + " p").classList.add("bold")
         }
 
         if (messageContent.length >= 30) {
@@ -273,23 +287,10 @@ watch(matchedUsers, () => {
   })
 })
 
-function getAge(date) {
-  const today = new Date();
-  const birthDate = new Date(date);
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const m = today.getMonth() - birthDate.getMonth();
-  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-    age--;
-  }
-  return age;
-}
 
-function getDate(date) {
-  let yourDate = new Date(date)
-  const offset = yourDate.getTimezoneOffset()
-  yourDate = new Date(yourDate.getTime() - (offset * 60 * 1000))
-  return yourDate.toISOString().split('T')[0]
-
+function openProfile(user) {
+  modalOpen.value = true
+  modalUser.value = user
 }
 
 onBeforeMount(() => {
@@ -641,21 +642,6 @@ body {
   background-color: #ffd1e8;
 }
 
-::-webkit-scrollbar {
-  width: 5px;
-}
-
-::-webkit-scrollbar-track {
-  width: 5px;
-  background: #f5f5f5;
-}
-
-::-webkit-scrollbar-thumb {
-  width: 1em;
-  background-color: #ddd;
-  border-radius: 1rem;
-}
-
 .text-small {
   font-size: 0.9rem;
 }
@@ -711,11 +697,22 @@ input::placeholder {
   width: 100%;
 }
 
-.bold {
-  font-weight: 500;
-}
-
 .media-body {
   padding-top: 3px;
+}
+
+.modal-enter-active,
+.modal-leave-active {
+  transition: all 0.25s ease-in-out;
+}
+
+.modal-enter-from {
+  opacity: 0;
+  transform: scale(1.1);
+}
+
+.modal-leave-to {
+  opacity: 0;
+  transform: scale(0.9);
 }
 </style>

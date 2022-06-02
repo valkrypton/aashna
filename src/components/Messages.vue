@@ -26,10 +26,10 @@
       </template>
     </div>
 
-    <form @submit.prevent="() => {msg = ''}">
+    <form @submit.prevent="sendMsg">
       <div class="text-box-container">
         <input v-model="msg" type="text" class="text-input" placeholder="enter message..">
-        <button @click="sendMsg" id="button-addon2" type="submit" class="btn btn-link"><i class="fa fa-paper-plane"></i>
+        <button id="button-addon2" type="submit" class="btn btn-link"><i class="fa fa-paper-plane"></i>
         </button>
       </div>
     </form>
@@ -38,10 +38,9 @@
 </template>
 
 <script setup>
-import {onBeforeMount, onMounted, onUnmounted, onUpdated, ref, watch} from "vue";
+import {ref, watch} from "vue";
 import axios from "axios";
 
-const ours = ref([]);
 const theirs = ref([]);
 let all_msgs = ref([]);
 
@@ -57,18 +56,20 @@ watch(props, () => {
 })
 const msg = ref('')
 const emit = defineEmits(['mew-msg'])
-const baseURL = 'http://localhost:3000'
 
 function sendMsg() {
-  props.socket.emit('private_message', {
-    content: msg.value,
-    to: props.theirID
-  })
-  all_msgs.value.push({sender: props.ourID, receiver: props.theirID, content: msg.value});
-  emit("new-msg", props.them, {from: props.us, to: props.them, content: msg.value, timestamp: new Date()})
-  setTimeout(() => {
-    document.querySelector(".chat-box").scrollTop = document.querySelector(".chat-box").scrollHeight;
-  }, 10)
+  if (msg.value !== "") {
+    props.socket.emit('private_message', {
+      content: msg.value,
+      to: props.theirID
+    })
+    all_msgs.value.push({sender: props.ourID, receiver: props.theirID, content: msg.value});
+    emit("new-msg", props.them, {from: props.us, to: props.them, content: msg.value, timestamp: new Date()})
+    setTimeout(() => {
+      document.querySelector(".chat-box").scrollTop = document.querySelector(".chat-box").scrollHeight;
+    }, 10)
+    msg.value = ""
+  }
 }
 
 props.socket.on('private_message', ({content, from, to}) => {
@@ -99,22 +100,6 @@ getAllMsgs();
 </script>
 
 <style scoped>
-
-::-webkit-scrollbar {
-  width: 5px;
-}
-
-::-webkit-scrollbar-track {
-  width: 5px;
-  background: #f5f5f5;
-}
-
-::-webkit-scrollbar-thumb {
-  width: 1em;
-  background-color: #ddd;
-  border-radius: 1rem;
-}
-
 .text-small {
   font-size: 0.9rem;
 }

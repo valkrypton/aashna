@@ -212,7 +212,6 @@ app.get("/currentUser", async (req, res) => {
 app.post("/leftSwipe", upload.none(), async (req, res) => {
     const authHeader = req.headers['authorization']
     const token = authHeader && authHeader.split(' ')[1]
-    console.log()
     jwt.verify(token, 'secret', {}, async (err, decoded) => {
         if (err) {
             console.log(err)

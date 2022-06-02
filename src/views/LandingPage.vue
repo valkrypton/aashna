@@ -7,7 +7,7 @@
           alt="img" class="rounded-3">
     </div>
     <div>
-      <span>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Accusantium adipisci aut consequuntur dolor dolore dolores dolorum ducimus, enim error fugit harum impedit laboriosam minima quaerat soluta sunt tenetur veniam voluptatibus.</span>
+      <span>Our project is Aashna, a friend finding app exclusively for Nustians. Our aim was to make a pleasant to use webapp that would allow Nustians to make new friends with people who shared similar interests to them</span>
     </div>
   </section>
   <About/>
