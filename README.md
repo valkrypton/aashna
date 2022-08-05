@@ -1,5 +1,8 @@
 # aashna
-
+# A little about Aashna
+Aashna is the urdu word for friend-ship and that's exactly the purpose of this app.
+We took insipiration from Bumble and built an app that allows student of NUST to make friends.
+Built with VueJS.
 ## Project setup
 ```
 npm install
